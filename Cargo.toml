@@ -1,0 +1,31 @@
+[package]
+name = "list_of_lists"
+version = "0.1.0"
+authors = ["Jacob Luszcz"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+bytes = "1.0"
+chrono = "0.4"
+chrono-tz = "0.4"
+clap = "2.33"
+fern = "0.6"
+log = "0.4"
+md5 = "0.7"
+html-minifier = "3.0"
+reqwest = { version = "0.11", features = ["gzip", "json"] }
+s3 = { git = "https://github.com/awslabs/aws-sdk-rust", tag = "v0.0.8-alpha", package = "aws-sdk-s3" }
+serde = "1.0"
+serde_json = "1.0"
+tempfile = "3.2"
+tera = "1.11"
+tokio = { version = "1.6", features = ["full"] }
+
+[[bin]]
+name = "updater"
+path = "src/updater/main.rs"
+
+[[bin]]
+name = "generator"
+path = "src/generator/main.rs"
