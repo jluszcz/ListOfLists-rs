@@ -88,7 +88,7 @@ pub mod s3 {
             .put_object()
             .bucket(bucket_name)
             .key(object_name)
-            .content_disposition(content_type)
+            .content_type(content_type)
             .body(ByteStream::from(Vec::from(data.as_ref())));
 
         debug!("Uploading {}:{} to S3", bucket_name, object_name);
