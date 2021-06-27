@@ -337,18 +337,18 @@ resource "aws_lambda_permission" "generator_allow_bucket" {
   source_arn    = aws_s3_bucket.generator.arn
 }
 
-variable "lambda_filename" {
+variable "lambda_generator_filename" {
   type    = string
-  default = "listoflists.zip"
+  default = "generator.zip"
 }
 
 resource "aws_lambda_function" "lambda_generator" {
-  filename         = var.lambda_filename
+  filename         = var.lambda_generator_filename
   function_name    = "${var.site_name}-generator"
   role             = aws_iam_role.lambda_generator.arn
-  handler          = "generator.lambda_handler"
-  source_code_hash = filebase64sha256(var.lambda_filename)
-  runtime          = "python3.8"
+  source_code_hash = filebase64sha256(var.lambda_generator_filename)
+  runtime          = "provided.al2"
+  handler          = "ignored"
   publish          = "false"
   description      = "Generate ${var.site_url}"
   timeout          = 5
@@ -356,8 +356,8 @@ resource "aws_lambda_function" "lambda_generator" {
 
   environment {
     variables = {
-      SITE     = var.site_name
-      SITE_URL = var.site_url
+      LOL_SITE     = var.site_name
+      LOL_SITE_URL = var.site_url
     }
   }
 }
@@ -382,13 +382,18 @@ resource "aws_cloudwatch_event_target" "updater_event_target" {
   arn       = aws_lambda_function.lambda_updater.arn
 }
 
+variable "lambda_updater_filename" {
+  type    = string
+  default = "updater.zip"
+}
+
 resource "aws_lambda_function" "lambda_updater" {
-  filename         = var.lambda_filename
+  filename         = var.lambda_updater_filename
   function_name    = "${var.site_name}-updater"
   role             = aws_iam_role.lambda_updater.arn
-  handler          = "updater.lambda_handler"
-  source_code_hash = filebase64sha256(var.lambda_filename)
-  runtime          = "python3.8"
+  source_code_hash = filebase64sha256(var.lambda_updater_filename)
+  runtime          = "provided.al2"
+  handler          = "ignored"
   publish          = "false"
   description      = "Update ${var.site_url}"
   timeout          = 5
@@ -396,10 +401,10 @@ resource "aws_lambda_function" "lambda_updater" {
 
   environment {
     variables = {
-      SITE          = var.site_name
-      SITE_URL      = var.site_url
-      DB_ACCESS_KEY = var.db_access_key
-      DB_FILE_PATH  = var.db_file_path
+      LOL_SITE     = var.site_name
+      LOL_SITE_URL = var.site_url
+      LOL_DB_KEY   = var.db_access_key
+      LOL_DB_PATH  = var.db_file_path
     }
   }
 }

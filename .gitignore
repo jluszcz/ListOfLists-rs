@@ -1,6 +1,7 @@
 *.json
+*zip
 .terraform*
 /target
 env-*
-index.html
 images/
+index.html
