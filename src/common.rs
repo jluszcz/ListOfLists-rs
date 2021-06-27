@@ -1,8 +1,7 @@
-use std::error::Error;
-
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 
 pub static SITE_NAME_VAR: &str = "LOL_SITE";
 pub static SITE_URL_VAR: &str = "LOL_SITE_URL";
