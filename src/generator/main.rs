@@ -28,9 +28,10 @@ fn parse_args() -> Args {
                 .help("Verbose mode. Outputs DEBUG and higher log messages."),
         )
         .arg(
-            Arg::with_name("use-s3")
-                .long("s3")
-                .help("If provided, use S3 rather than local files."),
+            Arg::with_name("local")
+                .short("l")
+                .long("local")
+                .help("If provided, use local files rather than S3."),
         )
         .arg(
             Arg::with_name("site-name")
@@ -48,7 +49,7 @@ fn parse_args() -> Args {
 
     let verbose = matches.is_present("verbose");
 
-    let use_s3 = matches.is_present("use-s3");
+    let use_s3 = !matches.is_present("local");
 
     let site_name = matches
         .value_of("site-name")
