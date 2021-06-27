@@ -50,7 +50,7 @@ impl Io {
                 s3_client,
                 site_bucket,
                 ..
-            } => common::s3::put(s3_client, site_bucket, target, content).await?,
+            } => common::s3::put(s3_client, site_bucket, target, "text/html", content).await?,
             Io::LocalFile => fs::write(target, content).await?,
         }
 

@@ -81,12 +81,14 @@ pub mod s3 {
         s3_client: &s3::Client,
         bucket_name: &str,
         object_name: &str,
+        content_type: &str,
         data: impl AsRef<[u8]>,
     ) -> Result<()> {
         let request = s3_client
             .put_object()
             .bucket(bucket_name)
             .key(object_name)
+            .content_disposition(content_type)
             .body(ByteStream::from(Vec::from(data.as_ref())));
 
         debug!("Uploading {}:{} to S3", bucket_name, object_name);

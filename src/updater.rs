@@ -185,7 +185,14 @@ pub async fn try_update_list_file(
         if db_md5 == e_tag && !force {
             info!("{} is already up to date, skipping", s3_object_name);
         } else {
-            common::s3::put(&s3_client, &s3_bucket_name, &s3_object_name, list).await?;
+            common::s3::put(
+                &s3_client,
+                &s3_bucket_name,
+                &s3_object_name,
+                "application/json",
+                list,
+            )
+            .await?;
         }
 
         Ok(())
