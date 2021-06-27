@@ -1,7 +1,11 @@
-use anyhow::Result;
 use clap::{App, Arg};
-use list_of_lists::{common, updater};
+use lambda_runtime::{handler_fn, Context};
+use list_of_lists::{
+    common::{self, LambdaError},
+    updater,
+};
 use log::debug;
+use serde_json::Value;
 use std::env;
 
 #[derive(Debug)]
@@ -95,7 +99,13 @@ fn parse_args() -> Args {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), LambdaError> {
+    let func = handler_fn(function);
+    lambda_runtime::run(func).await?;
+    Ok(())
+}
+
+async fn function(event: Value, _: Context) -> Result<Value, LambdaError> {
     let args = parse_args();
     common::set_up_logger(args.verbose)?;
     debug!("{:?}", args);
@@ -107,5 +117,7 @@ async fn main() -> Result<()> {
         args.dropbox_path,
         args.force,
     )
-    .await
+    .await?;
+
+    Ok(event)
 }
