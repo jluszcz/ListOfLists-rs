@@ -2,6 +2,7 @@
 *zip
 .terraform*
 /target
+bootstrap
 env-*
 images/
 index.html
