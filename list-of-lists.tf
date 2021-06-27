@@ -352,7 +352,7 @@ resource "aws_lambda_function" "lambda_generator" {
   publish          = "false"
   description      = "Generate ${var.site_url}"
   timeout          = 5
-  memory_size      = 256
+  memory_size      = 128
 
   environment {
     variables = {
@@ -397,7 +397,7 @@ resource "aws_lambda_function" "lambda_updater" {
   publish          = "false"
   description      = "Update ${var.site_url}"
   timeout          = 5
-  memory_size      = 256
+  memory_size      = 128
 
   environment {
     variables = {
