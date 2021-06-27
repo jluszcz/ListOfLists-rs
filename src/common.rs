@@ -33,7 +33,7 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
         LevelFilter::Info
     };
 
-    fern::Dispatch::new()
+    let _ = fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
                 "{} [{}] [{}] {}",
@@ -50,7 +50,7 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
         .level_for("tracing", LevelFilter::Off)
         .level_for("reqwest", LevelFilter::Off)
         .chain(std::io::stdout())
-        .apply()?;
+        .apply();
 
     Ok(())
 }
