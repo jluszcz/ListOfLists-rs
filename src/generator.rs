@@ -1,6 +1,6 @@
 use crate::common::{self, ListOfLists};
 use anyhow::Result;
-use html_minifier::HTMLMinifier;
+use log::debug;
 use std::str;
 use tera::{Context, Tera};
 use tokio::fs;
@@ -72,15 +72,6 @@ async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
     Ok(list_of_lists)
 }
 
-fn minify_html<'a>(minifier: &'a mut HTMLMinifier, content: &str) -> Result<&'a [u8]> {
-    minifier.set_minify_code(true);
-    minifier.set_remove_comments(true);
-
-    minifier.digest(content)?;
-
-    Ok(minifier.get_html())
-}
-
 pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> Result<()> {
     let mut tera = Tera::default();
 
@@ -89,9 +80,9 @@ pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> R
     let (_, list_of_lists) =
         tokio::try_join!(read_template(&io, &mut tera), read_list(&io, &site_name))?;
 
+    debug!("Rendering {}", SITE_INDEX);
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
+    debug!("Rendered {}", SITE_INDEX);
 
-    let mut minifier = HTMLMinifier::new();
-    io.write(SITE_INDEX, minify_html(&mut minifier, &site)?)
-        .await
+    io.write(SITE_INDEX, &site).await
 }

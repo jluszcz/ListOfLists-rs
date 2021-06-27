@@ -60,7 +60,7 @@ pub mod s3 {
     use super::*;
     use ::s3::{self, ByteStream};
     use bytes::Bytes;
-    use log::trace;
+    use log::debug;
 
     pub async fn get(
         s3_client: &s3::Client,
@@ -69,10 +69,10 @@ pub mod s3 {
     ) -> Result<Bytes> {
         let request = s3_client.get_object().bucket(bucket_name).key(object_name);
 
-        trace!("Reading {}:{} from S3", bucket_name, object_name);
+        debug!("Reading {}:{} from S3", bucket_name, object_name);
         let response = request.send().await?;
         let bytes = response.body.collect().await?.into_bytes();
-        trace!("Read {}:{} from S3", bucket_name, object_name);
+        debug!("Read {}:{} from S3", bucket_name, object_name);
 
         Ok(bytes)
     }
@@ -89,9 +89,9 @@ pub mod s3 {
             .key(object_name)
             .body(ByteStream::from(Vec::from(data.as_ref())));
 
-        trace!("Uploading {}:{} to S3", bucket_name, object_name);
+        debug!("Uploading {}:{} to S3", bucket_name, object_name);
         request.send().await?;
-        trace!("Uploaded {}:{} to S3", bucket_name, object_name);
+        debug!("Uploaded {}:{} to S3", bucket_name, object_name);
 
         Ok(())
     }
