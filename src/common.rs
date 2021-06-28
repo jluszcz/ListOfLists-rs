@@ -57,40 +57,51 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
 
 pub mod s3 {
     use super::*;
-    use ::s3::{self, ByteStream};
     use bytes::Bytes;
     use log::debug;
+    use rusoto_s3::{GetObjectRequest, PutObjectRequest, S3Client, S3};
+    use tokio::io::AsyncReadExt;
 
-    pub async fn get(
-        s3_client: &s3::Client,
-        bucket_name: &str,
-        object_name: &str,
-    ) -> Result<Bytes> {
-        let request = s3_client.get_object().bucket(bucket_name).key(object_name);
+    pub async fn get(s3_client: &S3Client, bucket_name: &str, object_name: &str) -> Result<Bytes> {
+        let request = GetObjectRequest {
+            bucket: bucket_name.into(),
+            key: object_name.into(),
+            ..Default::default()
+        };
+
+        let mut bytes = Vec::new();
 
         debug!("Reading {}:{} from S3", bucket_name, object_name);
-        let response = request.send().await?;
-        let bytes = response.body.collect().await?.into_bytes();
+        s3_client
+            .get_object(request)
+            .await?
+            .body
+            .expect("no body on response")
+            .into_async_read()
+            .read_to_end(&mut bytes)
+            .await?;
         debug!("Read {}:{} from S3", bucket_name, object_name);
 
-        Ok(bytes)
+        Ok(Bytes::from(bytes))
     }
 
     pub async fn put(
-        s3_client: &s3::Client,
+        s3_client: &S3Client,
         bucket_name: &str,
         object_name: &str,
-        _content_type: &str,
+        content_type: &str,
         data: impl AsRef<[u8]>,
     ) -> Result<()> {
-        let request = s3_client
-            .put_object()
-            .bucket(bucket_name)
-            .key(object_name)
-            .body(ByteStream::from(Vec::from(data.as_ref())));
+        let request = PutObjectRequest {
+            body: Some(Vec::from(data.as_ref()).into()),
+            bucket: bucket_name.into(),
+            content_type: Some(content_type.into()),
+            key: object_name.into(),
+            ..Default::default()
+        };
 
         debug!("Uploading {}:{} to S3", bucket_name, object_name);
-        request.send().await?;
+        s3_client.put_object(request).await?;
         debug!("Uploaded {}:{} to S3", bucket_name, object_name);
 
         Ok(())

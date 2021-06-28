@@ -15,7 +15,7 @@ log = "0.4"
 md5 = "0.7"
 lambda_runtime = "0.3"
 reqwest = { version = "0.11", features = ["gzip", "json"] }
-s3 = { git = "https://github.com/awslabs/aws-sdk-rust", tag = "v0.0.8-alpha", package = "aws-sdk-s3" }
+rusoto_s3 = "0.46"
 serde = "1.0"
 serde_json = "1.0"
 tera = "1.11"

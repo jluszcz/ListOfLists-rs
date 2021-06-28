@@ -1,6 +1,7 @@
 use crate::common::{self, ListOfLists};
 use anyhow::Result;
 use log::debug;
+use rusoto_s3::S3Client;
 use std::str;
 use tera::{Context, Tera};
 use tokio::fs;
@@ -12,7 +13,7 @@ enum Io {
     S3 {
         generator_bucket: String,
         site_bucket: String,
-        s3_client: s3::Client,
+        s3_client: S3Client,
     },
     LocalFile,
 }
@@ -23,7 +24,7 @@ impl Io {
             Self::S3 {
                 generator_bucket: format!("{}-generator", site_url),
                 site_bucket: site_url,
-                s3_client: s3::Client::from_env(),
+                s3_client: S3Client::new(Default::default()),
             }
         } else {
             Self::LocalFile
