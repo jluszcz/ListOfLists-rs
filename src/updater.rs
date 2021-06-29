@@ -122,7 +122,7 @@ async fn get_s3_metadata(
     let last_modified_time = response
         .last_modified
         .map(|t| {
-            DateTime::parse_from_rfc3339(t.as_str())
+            DateTime::parse_from_rfc2822(t.as_str())
                 .expect("failed to parse timestamp")
                 .with_timezone(&Utc)
         })

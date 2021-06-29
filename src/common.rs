@@ -93,10 +93,10 @@ pub mod s3 {
         data: impl AsRef<[u8]>,
     ) -> Result<()> {
         let request = PutObjectRequest {
-            body: Some(Vec::from(data.as_ref()).into()),
             bucket: bucket_name.into(),
-            content_type: Some(content_type.into()),
             key: object_name.into(),
+            content_type: Some(content_type.into()),
+            body: Some(Vec::from(data.as_ref()).into()),
             ..Default::default()
         };
 
