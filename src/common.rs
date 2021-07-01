@@ -14,7 +14,9 @@ pub type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 pub struct ListOfLists {
     pub title: String,
     pub lists: Vec<List>,
-    pub card_url: Option<String>,
+
+    #[serde(default)]
+    pub card_image_exists: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -58,13 +60,9 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
 
 pub mod s3 {
     use super::*;
-    use anyhow::anyhow;
     use bytes::Bytes;
-    use log::debug;
-    use rusoto_core::RusotoError;
-    use rusoto_s3::{
-        GetObjectRequest, HeadObjectError, HeadObjectRequest, PutObjectRequest, S3Client, S3,
-    };
+    use log::{debug, info};
+    use rusoto_s3::{GetObjectRequest, HeadObjectRequest, PutObjectRequest, S3Client, S3};
     use tokio::io::AsyncReadExt;
 
     pub async fn get(s3_client: &S3Client, bucket_name: &str, object_name: &str) -> Result<Bytes> {
@@ -127,10 +125,12 @@ pub mod s3 {
         let response = s3_client.head_object(request).await;
         debug!("Checked {}:{} on S3", bucket_name, object_name);
 
-        match response {
-            Ok(_) => Ok(true),
-            Err(RusotoError::Service(HeadObjectError::NoSuchKey(_))) => Ok(false),
-            Err(e) => Err(anyhow!("Failed to query S3: {}", e)),
-        }
+        Ok(match response {
+            Ok(_) => true,
+            Err(e) => {
+                info!("Failed to query S3: {:?}", e);
+                false
+            }
+        })
     }
 }

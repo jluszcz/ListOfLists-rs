@@ -96,8 +96,8 @@ async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
     Ok(list_of_lists)
 }
 
-async fn card_image_exists(io: &Io, card_image_url: &str) -> Result<bool> {
-    io.exists(card_image_url).await
+async fn card_image_exists(io: &Io) -> Result<bool> {
+    io.exists("images/card.png").await
 }
 
 pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> Result<()> {
@@ -105,17 +105,13 @@ pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> R
 
     let io = Io::new(site_url, use_s3);
 
-    let card_image_url = format!("images/{}_card.png", site_name);
-
     let (_, mut list_of_lists, card_image_exists) = tokio::try_join!(
         read_template(&io, &mut tera),
         read_list(&io, &site_name),
-        card_image_exists(&io, &card_image_url),
+        card_image_exists(&io),
     )?;
 
-    if card_image_exists {
-        list_of_lists.card_url = Some(card_image_url);
-    }
+    list_of_lists.card_image_exists = card_image_exists;
 
     debug!("Rendering {}", SITE_INDEX);
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;

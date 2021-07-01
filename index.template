@@ -8,9 +8,9 @@
     <meta property="og:title" content="{{ title }}"/>
     <meta name="twitter:title" value="{{ title }}"/>
     <meta property="og:type" content="website"/>
-    {%- if card_url %}
-    <meta property="og:image" content="{{ card_url | safe }}"/>
-    <meta name="twitter:image" value="{{ card_url | safe }}"/>
+    {%- if card_image_exists %}
+    <meta property="og:image" content="images/card.png"/>
+    <meta name="twitter:image" value="images/card.png"/>
     {%- endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 </head>

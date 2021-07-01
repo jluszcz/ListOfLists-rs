@@ -280,7 +280,7 @@ data "aws_iam_policy_document" "generator_s3" {
   }
 
   statement {
-    actions   = ["s3:GetObject"]
+    actions   = ["s3:GetObject", "s3:HeadObject"]
     resources = ["${aws_s3_bucket.site.arn}/images/card.png"]
   }
 
