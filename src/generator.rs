@@ -41,7 +41,11 @@ impl Io {
                 let bytes = common::s3::get(s3_client, &generator_bucket, target).await?;
                 Ok(str::from_utf8(&bytes)?.into())
             }
-            Io::LocalFile => Ok(fs::read_to_string(target).await?),
+
+            Io::LocalFile => {
+                debug!("Reading {}", target);
+                Ok(fs::read_to_string(target).await?)
+            }
         }
     }
 
@@ -52,10 +56,29 @@ impl Io {
                 site_bucket,
                 ..
             } => common::s3::put(s3_client, site_bucket, target, "text/html", content).await?,
-            Io::LocalFile => fs::write(target, content).await?,
+
+            Io::LocalFile => {
+                debug!("Writing to {}", target);
+                fs::write(target, content).await?
+            }
         }
 
         Ok(())
+    }
+
+    async fn exists(&self, target: &str) -> Result<bool> {
+        match self {
+            Io::S3 {
+                s3_client,
+                site_bucket,
+                ..
+            } => common::s3::exists(s3_client, site_bucket, target).await,
+
+            Io::LocalFile => {
+                debug!("Checking if {} exists", target);
+                Ok(fs::metadata(target).await.is_ok())
+            }
+        }
     }
 }
 
@@ -73,13 +96,26 @@ async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
     Ok(list_of_lists)
 }
 
+async fn card_image_exists(io: &Io, card_image_url: &str) -> Result<bool> {
+    io.exists(card_image_url).await
+}
+
 pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> Result<()> {
     let mut tera = Tera::default();
 
     let io = Io::new(site_url, use_s3);
 
-    let (_, list_of_lists) =
-        tokio::try_join!(read_template(&io, &mut tera), read_list(&io, &site_name))?;
+    let card_image_url = format!("images/{}_card.png", site_name);
+
+    let (_, mut list_of_lists, card_image_exists) = tokio::try_join!(
+        read_template(&io, &mut tera),
+        read_list(&io, &site_name),
+        card_image_exists(&io, &card_image_url),
+    )?;
+
+    if card_image_exists {
+        list_of_lists.card_url = Some(card_image_url);
+    }
 
     debug!("Rendering {}", SITE_INDEX);
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
