@@ -3,20 +3,17 @@ terraform {
 }
 
 # Sourced from environment variables named TF_VAR_${VAR_NAME}
-variable "aws_acct_id" {
-}
+variable "aws_acct_id" {}
 
-variable "site_name" {
-}
+variable "site_name" {}
 
-variable "site_url" {
-}
+variable "site_url" {}
 
-variable "db_access_key" {
-}
+variable "db_access_key" {}
 
-variable "db_file_path" {
-}
+variable "db_file_path" {}
+
+variable "code_bucket" {}
 
 variable "aws_region" {
   type    = string
@@ -337,22 +334,17 @@ resource "aws_lambda_permission" "generator_allow_bucket" {
   source_arn    = aws_s3_bucket.generator.arn
 }
 
-variable "lambda_generator_filename" {
-  type    = string
-  default = "generator.zip"
-}
-
 resource "aws_lambda_function" "lambda_generator" {
-  filename         = var.lambda_generator_filename
-  function_name    = "${var.site_name}-generator"
-  role             = aws_iam_role.lambda_generator.arn
-  source_code_hash = filebase64sha256(var.lambda_generator_filename)
-  runtime          = "provided.al2"
-  handler          = "ignored"
-  publish          = "false"
-  description      = "Generate ${var.site_url}"
-  timeout          = 5
-  memory_size      = 128
+  function_name = "${var.site_name}-generator"
+  s3_bucket     = var.code_bucket
+  s3_key        = "generator.zip"
+  role          = aws_iam_role.lambda_generator.arn
+  runtime       = "provided.al2"
+  handler       = "ignored"
+  publish       = "false"
+  description   = "Generate ${var.site_url}"
+  timeout       = 5
+  memory_size   = 128
 
   environment {
     variables = {
@@ -382,22 +374,17 @@ resource "aws_cloudwatch_event_target" "updater_event_target" {
   arn       = aws_lambda_function.lambda_updater.arn
 }
 
-variable "lambda_updater_filename" {
-  type    = string
-  default = "updater.zip"
-}
-
 resource "aws_lambda_function" "lambda_updater" {
-  filename         = var.lambda_updater_filename
-  function_name    = "${var.site_name}-updater"
-  role             = aws_iam_role.lambda_updater.arn
-  source_code_hash = filebase64sha256(var.lambda_updater_filename)
-  runtime          = "provided.al2"
-  handler          = "ignored"
-  publish          = "false"
-  description      = "Update ${var.site_url}"
-  timeout          = 5
-  memory_size      = 128
+  function_name = "${var.site_name}-updater"
+  s3_bucket     = var.code_bucket
+  s3_key        = "updater.zip"
+  role          = aws_iam_role.lambda_updater.arn
+  runtime       = "provided.al2"
+  handler       = "ignored"
+  publish       = "false"
+  description   = "Update ${var.site_url}"
+  timeout       = 5
+  memory_size   = 128
 
   environment {
     variables = {
