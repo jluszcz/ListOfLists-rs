@@ -28,5 +28,13 @@ name = "updater"
 path = "src/updater/main.rs"
 
 [[bin]]
+name = "updater-lambda"
+path = "src/updater/lambda.rs"
+
+[[bin]]
 name = "generator"
 path = "src/generator/main.rs"
+
+[[bin]]
+name = "generator-lambda"
+path = "src/generator/lambda.rs"
