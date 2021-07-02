@@ -78,16 +78,16 @@ resource "aws_s3_bucket_policy" "site" {
 resource "aws_s3_bucket_object" "favicon" {
   bucket = aws_s3_bucket.site.id
   key    = "images/favicon.ico"
-  source = "buckets/${var.site_name}/images/favicon.ico"
-  etag   = filemd5("buckets/${var.site_name}/images/favicon.ico")
+  source = "buckets/${var.site_url}/images/favicon.ico"
+  etag   = filemd5("buckets/${var.site_url}/images/favicon.ico")
 }
 
 resource "aws_s3_bucket_object" "card_image" {
-  count  = fileexists("buckets/${var.site_name}/images/card.png") ? 1 : 0
+  count  = fileexists("buckets/${var.site_url}/images/card.png") ? 1 : 0
   bucket = aws_s3_bucket.site.id
   key    = "images/card.png"
-  source = "buckets/${var.site_name}/images/card.png"
-  etag   = filemd5("buckets/${var.site_name}/images/card.png")
+  source = "buckets/${var.site_url}/images/card.png"
+  etag   = filemd5("buckets/${var.site_url}/images/card.png")
 }
 
 resource "aws_acm_certificate" "cert" {
