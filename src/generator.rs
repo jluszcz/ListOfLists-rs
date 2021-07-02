@@ -1,8 +1,12 @@
 use crate::common::{self, ListOfLists};
 use anyhow::Result;
+use html_minifier::HTMLMinifier;
 use log::debug;
 use rusoto_s3::S3Client;
-use std::str;
+use std::{
+    path::{Path, PathBuf},
+    str,
+};
 use tera::{Context, Tera};
 use tokio::fs;
 
@@ -11,23 +15,27 @@ const SITE_INDEX: &str = "index.html";
 
 enum Io {
     S3 {
+        s3_client: S3Client,
         generator_bucket: String,
         site_bucket: String,
-        s3_client: S3Client,
     },
-    LocalFile,
+    LocalFile {
+        path: PathBuf,
+    },
 }
 
 impl Io {
     fn new(site_url: String, use_s3: bool) -> Self {
         if use_s3 {
             Self::S3 {
+                s3_client: S3Client::new(Default::default()),
                 generator_bucket: format!("{}-generator", site_url),
                 site_bucket: site_url,
-                s3_client: S3Client::new(Default::default()),
             }
         } else {
-            Self::LocalFile
+            Self::LocalFile {
+                path: Path::new("buckets").join(site_url),
+            }
         }
     }
 
@@ -42,9 +50,10 @@ impl Io {
                 Ok(str::from_utf8(&bytes)?.into())
             }
 
-            Io::LocalFile => {
-                debug!("Reading {}", target);
-                Ok(fs::read_to_string(target).await?)
+            Io::LocalFile { path } => {
+                let path = path.join(target);
+                debug!("Reading {:?}", path);
+                Ok(fs::read_to_string(path).await?)
             }
         }
     }
@@ -57,9 +66,10 @@ impl Io {
                 ..
             } => common::s3::put(s3_client, site_bucket, target, "text/html", content).await?,
 
-            Io::LocalFile => {
-                debug!("Writing to {}", target);
-                fs::write(target, content).await?
+            Io::LocalFile { path } => {
+                let path = path.join(target);
+                debug!("Writing to {:?}", path);
+                fs::write(path, content).await?
             }
         }
 
@@ -74,9 +84,10 @@ impl Io {
                 ..
             } => common::s3::exists(s3_client, site_bucket, target).await,
 
-            Io::LocalFile => {
-                debug!("Checking if {} exists", target);
-                Ok(fs::metadata(target).await.is_ok())
+            Io::LocalFile { path } => {
+                let path = path.join(target);
+                debug!("Checking if {:?} exists", path);
+                Ok(fs::metadata(path).await.is_ok())
             }
         }
     }
@@ -100,10 +111,18 @@ async fn card_image_exists(io: &Io) -> Result<bool> {
     io.exists("images/card.png").await
 }
 
+fn minify_html(html_minifier: &mut HTMLMinifier, site: String) -> Result<&[u8]> {
+    debug!("Minifying {}", SITE_INDEX);
+    html_minifier.digest(site)?;
+    let site = html_minifier.get_html();
+    debug!("Minified {}", SITE_INDEX);
+    Ok(site)
+}
+
 pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> Result<()> {
     let mut tera = Tera::default();
 
-    let io = Io::new(site_url, use_s3);
+    let io = Io::new(site_url.clone(), use_s3);
 
     let (_, mut list_of_lists, card_image_exists) = tokio::try_join!(
         read_template(&io, &mut tera),
@@ -111,11 +130,16 @@ pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> R
         card_image_exists(&io),
     )?;
 
-    list_of_lists.card_image_exists = card_image_exists;
+    if card_image_exists {
+        list_of_lists.card_image_url = Some(format!("https://{}/images/card.png", site_url));
+    }
 
     debug!("Rendering {}", SITE_INDEX);
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
     debug!("Rendered {}", SITE_INDEX);
 
-    io.write(SITE_INDEX, &site).await
+    let mut html_minifier = HTMLMinifier::new();
+
+    io.write(SITE_INDEX, minify_html(&mut html_minifier, site)?)
+        .await
 }

@@ -14,9 +14,7 @@ pub type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 pub struct ListOfLists {
     pub title: String,
     pub lists: Vec<List>,
-
-    #[serde(default)]
-    pub card_image_exists: bool,
+    pub card_image_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
