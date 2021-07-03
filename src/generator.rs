@@ -1,6 +1,6 @@
 use crate::common::{self, ListOfLists};
 use anyhow::Result;
-use html_minifier::HTMLMinifier;
+use html5minify::Minify;
 use log::debug;
 use rusoto_s3::S3Client;
 use std::{
@@ -111,14 +111,6 @@ async fn card_image_exists(io: &Io) -> Result<bool> {
     io.exists("images/card.png").await
 }
 
-fn minify_html(html_minifier: &mut HTMLMinifier, site: String) -> Result<&[u8]> {
-    debug!("Minifying {}", SITE_INDEX);
-    html_minifier.digest(site)?;
-    let site = html_minifier.get_html();
-    debug!("Minified {}", SITE_INDEX);
-    Ok(site)
-}
-
 pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> Result<()> {
     let mut tera = Tera::default();
 
@@ -138,8 +130,9 @@ pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> R
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
     debug!("Rendered {}", SITE_INDEX);
 
-    let mut html_minifier = HTMLMinifier::new();
+    debug!("Minifying {} (original size: {})", SITE_INDEX, site.len());
+    let site = site.minify()?;
+    debug!("Minified {} (new size: {})", SITE_INDEX, site.len());
 
-    io.write(SITE_INDEX, minify_html(&mut html_minifier, site)?)
-        .await
+    io.write(SITE_INDEX, &site).await
 }

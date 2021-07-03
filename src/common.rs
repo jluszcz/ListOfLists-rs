@@ -45,11 +45,12 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
             ))
         })
         .level(level)
-        .level_for("hyper", LevelFilter::Off)
-        .level_for("rustls", LevelFilter::Off)
-        .level_for("smithy_http_tower", LevelFilter::Off)
-        .level_for("tracing", LevelFilter::Off)
-        .level_for("reqwest", LevelFilter::Off)
+        .level_for("hyper", LevelFilter::Warn)
+        .level_for("rustls", LevelFilter::Warn)
+        .level_for("smithy_http_tower", LevelFilter::Warn)
+        .level_for("tracing", LevelFilter::Warn)
+        .level_for("reqwest", LevelFilter::Warn)
+        .level_for("html5ever", LevelFilter::Warn)
         .chain(std::io::stdout())
         .apply();
 
