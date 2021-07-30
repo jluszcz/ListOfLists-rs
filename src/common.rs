@@ -51,84 +51,79 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
         .level_for("tracing", LevelFilter::Warn)
         .level_for("reqwest", LevelFilter::Warn)
         .level_for("html5ever", LevelFilter::Warn)
-        .level_for("rusoto_core", LevelFilter::Warn)
         .chain(std::io::stdout())
         .apply();
 
     Ok(())
 }
 
-pub mod s3 {
+pub mod s3util {
     use super::*;
     use bytes::Bytes;
-    use log::{debug, info};
-    use rusoto_s3::{GetObjectRequest, HeadObjectRequest, PutObjectRequest, S3Client, S3};
-    use tokio::io::AsyncReadExt;
+    use log::{debug, warn};
+    use s3::{ByteStream, SdkError};
 
-    pub async fn get(s3_client: &S3Client, bucket_name: &str, object_name: &str) -> Result<Bytes> {
-        let request = GetObjectRequest {
-            bucket: bucket_name.into(),
-            key: object_name.into(),
-            ..Default::default()
-        };
-
-        let mut bytes = Vec::new();
-
+    pub async fn get(
+        s3_client: &s3::Client,
+        bucket_name: &str,
+        object_name: &str,
+    ) -> Result<Bytes> {
         debug!("Reading {}:{} from S3", bucket_name, object_name);
-        s3_client
-            .get_object(request)
+        let bytes = s3_client
+            .get_object()
+            .bucket(bucket_name)
+            .key(object_name)
+            .send()
             .await?
             .body
-            .expect("no body on response")
-            .into_async_read()
-            .read_to_end(&mut bytes)
-            .await?;
+            .collect()
+            .await?
+            .into_bytes();
         debug!("Read {}:{} from S3", bucket_name, object_name);
 
-        Ok(Bytes::from(bytes))
+        Ok(bytes)
     }
 
     pub async fn put(
-        s3_client: &S3Client,
+        s3_client: &s3::Client,
         bucket_name: &str,
         object_name: &str,
         content_type: &str,
-        data: impl AsRef<[u8]>,
+        data: &[u8],
     ) -> Result<()> {
-        let request = PutObjectRequest {
-            bucket: bucket_name.into(),
-            key: object_name.into(),
-            content_type: Some(content_type.into()),
-            body: Some(Vec::from(data.as_ref()).into()),
-            ..Default::default()
-        };
-
         debug!("Uploading {}:{} to S3", bucket_name, object_name);
-        s3_client.put_object(request).await?;
+        s3_client
+            .put_object()
+            .bucket(bucket_name)
+            .key(object_name)
+            .content_type(content_type)
+            .body(ByteStream::from(Bytes::from(Vec::from(data))))
+            .send()
+            .await?;
         debug!("Uploaded {}:{} to S3", bucket_name, object_name);
 
         Ok(())
     }
 
     pub async fn exists(
-        s3_client: &S3Client,
+        s3_client: &s3::Client,
         bucket_name: &str,
         object_name: &str,
     ) -> Result<bool> {
-        let request = HeadObjectRequest {
-            bucket: bucket_name.into(),
-            key: object_name.into(),
-            ..Default::default()
-        };
-
         debug!("Checking {}:{} on S3", bucket_name, object_name);
-        let response = s3_client.head_object(request).await;
+        let response = s3_client
+            .head_object()
+            .bucket(bucket_name)
+            .key(object_name)
+            .send()
+            .await;
         debug!("Checked {}:{} on S3", bucket_name, object_name);
 
         Ok(match response {
             Ok(_) => true,
-            Err(e) => {
-                info!("Failed to query S3: {:?}", e);
+            Err(SdkError::ServiceError { err, .. }) => !err.is_not_found(),
+            _ => {
+                warn!("Failed to query S3: {:?}", response);
                 false
             }
         })

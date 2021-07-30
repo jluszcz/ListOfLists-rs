@@ -3,7 +3,6 @@ use anyhow::{anyhow, Result};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use log::{debug, info, trace};
 use reqwest::header::HeaderMap;
-use rusoto_s3::{HeadObjectRequest, S3Client, S3};
 use serde::Serialize;
 use serde_json::{ser, Value};
 use std::convert::TryFrom;
@@ -100,18 +99,17 @@ async fn get_dropbox_metadata(dropbox_key: &str, dropbox_path: &str) -> Result<D
 }
 
 async fn get_s3_metadata(
-    s3_client: &S3Client,
+    s3_client: &s3::Client,
     bucket_name: &str,
     object_name: &str,
 ) -> Result<(String, DateTime<Utc>)> {
-    let request = HeadObjectRequest {
-        bucket: bucket_name.into(),
-        key: object_name.into(),
-        ..Default::default()
-    };
-
-    trace!("Querying S3: {:?}", request);
-    let response = s3_client.head_object(request).await?;
+    trace!("Querying S3");
+    let response = s3_client
+        .head_object()
+        .bucket(bucket_name)
+        .key(object_name)
+        .send()
+        .await?;
     trace!("S3 Response: {:?}", response);
 
     let e_tag = response
@@ -121,11 +119,7 @@ async fn get_s3_metadata(
 
     let last_modified_time = response
         .last_modified
-        .map(|t| {
-            DateTime::parse_from_rfc2822(t.as_str())
-                .expect("failed to parse timestamp")
-                .with_timezone(&Utc)
-        })
+        .map(|t| t.to_chrono())
         .ok_or_else(|| anyhow!("missing last_modified"))?;
 
     debug!(
@@ -170,7 +164,7 @@ pub async fn try_update_list_file(
     dropbox_path: String,
     force: bool,
 ) -> Result<()> {
-    let s3_client = S3Client::new(Default::default());
+    let s3_client = s3::Client::from_env();
 
     let s3_bucket_name = format!("{}-generator", site_url);
     let s3_object_name = format!("{}.json", site_name);
@@ -193,12 +187,12 @@ pub async fn try_update_list_file(
         if db_md5 == e_tag && !force {
             info!("{} is already up to date, skipping", s3_object_name);
         } else {
-            common::s3::put(
+            common::s3util::put(
                 &s3_client,
                 &s3_bucket_name,
                 &s3_object_name,
                 "application/json",
-                list,
+                &list,
             )
             .await?;
         }

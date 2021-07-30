@@ -2,7 +2,6 @@ use crate::common::{self, ListOfLists};
 use anyhow::Result;
 use html5minify::Minify;
 use log::debug;
-use rusoto_s3::S3Client;
 use std::{
     path::{Path, PathBuf},
     str,
@@ -15,7 +14,7 @@ const SITE_INDEX: &str = "index.html";
 
 enum Io {
     S3 {
-        s3_client: S3Client,
+        s3_client: s3::Client,
         generator_bucket: String,
         site_bucket: String,
     },
@@ -28,7 +27,7 @@ impl Io {
     fn new(site_url: String, use_s3: bool) -> Self {
         if use_s3 {
             Self::S3 {
-                s3_client: S3Client::new(Default::default()),
+                s3_client: s3::Client::from_env(),
                 generator_bucket: format!("{}-generator", site_url),
                 site_bucket: site_url,
             }
@@ -46,7 +45,7 @@ impl Io {
                 generator_bucket,
                 ..
             } => {
-                let bytes = common::s3::get(s3_client, &generator_bucket, target).await?;
+                let bytes = common::s3util::get(s3_client, generator_bucket, target).await?;
                 Ok(str::from_utf8(&bytes)?.into())
             }
 
@@ -58,13 +57,13 @@ impl Io {
         }
     }
 
-    async fn write(&self, target: &str, content: impl AsRef<[u8]>) -> Result<()> {
+    async fn write(&self, target: &str, content: &[u8]) -> Result<()> {
         match self {
             Io::S3 {
                 s3_client,
                 site_bucket,
                 ..
-            } => common::s3::put(s3_client, site_bucket, target, "text/html", content).await?,
+            } => common::s3util::put(s3_client, site_bucket, target, "text/html", content).await?,
 
             Io::LocalFile { path } => {
                 let path = path.join(target);
@@ -82,7 +81,7 @@ impl Io {
                 s3_client,
                 site_bucket,
                 ..
-            } => common::s3::exists(s3_client, site_bucket, target).await,
+            } => common::s3util::exists(s3_client, site_bucket, target).await,
 
             Io::LocalFile { path } => {
                 let path = path.join(target);
@@ -130,9 +129,20 @@ pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> R
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
     debug!("Rendered {}", SITE_INDEX);
 
-    debug!("Minifying {} (original size: {})", SITE_INDEX, site.len());
+    let original_size = site.len();
+    debug!(
+        "Minifying {} (original size: {})",
+        SITE_INDEX, original_size
+    );
+
     let site = site.minify()?;
-    debug!("Minified {} (new size: {})", SITE_INDEX, site.len());
+
+    debug!(
+        "Minified {}: {:.1}% (new size: {})",
+        SITE_INDEX,
+        100.0 * (site.len() as f64 / original_size as f64),
+        site.len()
+    );
 
     io.write(SITE_INDEX, &site).await
 }
