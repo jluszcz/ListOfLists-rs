@@ -86,9 +86,11 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 [[package]]
 name = "aws-auth"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "aws-types",
+ "pin-project",
+ "smithy-async",
  "smithy-http",
  "tokio",
  "tracing",
@@ -98,7 +100,7 @@ dependencies = [
 [[package]]
 name = "aws-endpoint"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "aws-types",
  "http",
@@ -109,7 +111,7 @@ dependencies = [
 [[package]]
 name = "aws-http"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "aws-types",
  "http",
@@ -122,7 +124,7 @@ dependencies = [
 [[package]]
 name = "aws-hyper"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "aws-auth",
  "aws-endpoint",
@@ -146,8 +148,8 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-s3"
-version = "0.0.13-alpha"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+version = "0.0.15-alpha"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "aws-auth",
  "aws-endpoint",
@@ -166,7 +168,7 @@ dependencies = [
 [[package]]
 name = "aws-sig-auth"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "aws-auth",
  "aws-sigv4",
@@ -195,7 +197,7 @@ dependencies = [
 [[package]]
 name = "aws-types"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "lazy_static",
  "rustc_version",
@@ -857,9 +859,9 @@ dependencies = [
 
 [[package]]
 name = "lambda_runtime"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9b08856997d11ca8122121b26b17a27ef1dce689d71ccd754e051f2417aebdd"
+checksum = "db78b8997843bbb30fdf81ebb9fed56ded699d6226781ec8e2ddd980d3bd3591"
 dependencies = [
  "async-stream",
  "bytes",
@@ -1712,9 +1714,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
 
 [[package]]
+name = "smithy-async"
+version = "0.1.0"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
+dependencies = [
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
 name = "smithy-client"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "bytes",
  "fastrand",
@@ -1732,9 +1743,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "smithy-eventstream"
+version = "0.1.0"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
+dependencies = [
+ "bytes",
+ "crc32fast",
+ "smithy-types",
+]
+
+[[package]]
 name = "smithy-http"
 version = "0.0.1"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "bytes",
  "bytes-utils",
@@ -1744,6 +1765,7 @@ dependencies = [
  "hyper",
  "percent-encoding",
  "pin-project",
+ "smithy-eventstream",
  "smithy-types",
  "thiserror",
  "tokio",
@@ -1754,7 +1776,7 @@ dependencies = [
 [[package]]
 name = "smithy-http-tower"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "bytes",
  "http",
@@ -1768,15 +1790,18 @@ dependencies = [
 [[package]]
 name = "smithy-types"
 version = "0.0.1"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "chrono",
+ "itoa",
+ "num-integer",
+ "ryu",
 ]
 
 [[package]]
 name = "smithy-xml"
 version = "0.1.0"
-source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.13-alpha#7c5f3753b8fce99b43f7c1a4fe5f2dd8077b95e3"
+source = "git+https://github.com/awslabs/aws-sdk-rust?tag=v0.0.15-alpha#ce01df45f381f8c211cf6e3f90524295c43e164d"
 dependencies = [
  "thiserror",
  "xmlparser",
@@ -1952,9 +1977,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b7b349f11a7047e6d1276853e612d152f5e8a352c61917887cc2169e2366b4c"
+checksum = "01cf844b23c6131f624accf65ce0e4e9956a8bb329400ea5bcc26ae3a5c20b0b"
 dependencies = [
  "autocfg",
  "bytes",
