@@ -164,7 +164,8 @@ pub async fn try_update_list_file(
     dropbox_path: String,
     force: bool,
 ) -> Result<()> {
-    let s3_client = s3::Client::from_env();
+    let aws_config = aws_config::load_from_env().await;
+    let s3_client = s3::Client::new(&aws_config);
 
     let s3_bucket_name = format!("{}-generator", site_url);
     let s3_object_name = format!("{}.json", site_name);

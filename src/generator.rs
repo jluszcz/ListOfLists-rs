@@ -24,10 +24,11 @@ enum Io {
 }
 
 impl Io {
-    fn new(site_url: String, use_s3: bool) -> Self {
+    async fn new(site_url: String, use_s3: bool) -> Self {
         if use_s3 {
+            let aws_config = aws_config::load_from_env().await;
             Self::S3 {
-                s3_client: s3::Client::from_env(),
+                s3_client: s3::Client::new(&aws_config),
                 generator_bucket: format!("{}-generator", site_url),
                 site_bucket: site_url,
             }
@@ -113,7 +114,7 @@ async fn card_image_exists(io: &Io) -> Result<bool> {
 pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> Result<()> {
     let mut tera = Tera::default();
 
-    let io = Io::new(site_url.clone(), use_s3);
+    let io = Io::new(site_url.clone(), use_s3).await;
 
     let (_, mut list_of_lists, card_image_exists) = tokio::try_join!(
         read_template(&io, &mut tera),
