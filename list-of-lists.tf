@@ -192,7 +192,8 @@ resource "aws_s3_bucket_object" "index_template" {
 }
 
 resource "aws_route53_zone" "zone" {
-  name = var.site_url
+  name    = var.site_url
+  comment = "${var.site_name} Hosted Zone"
 }
 
 resource "aws_route53_record" "record" {
