@@ -1,11 +1,8 @@
 use anyhow::Result;
 use clap::{App, Arg};
-use list_of_lists::{
-    common::{self},
-    generator,
-};
+use list_of_lists::common;
+use list_of_lists::generator;
 use log::debug;
-use std::env;
 
 #[derive(Debug)]
 struct Args {
@@ -35,12 +32,16 @@ fn parse_args() -> Args {
             Arg::with_name("site-name")
                 .short("s")
                 .long("site-name")
+                .required(true)
+                .env(common::SITE_NAME_VAR)
                 .help("Site name, e.g. foolist."),
         )
         .arg(
             Arg::with_name("site-url")
                 .short("u")
                 .long("site-url")
+                .required(true)
+                .env(common::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )
         .get_matches();
@@ -49,17 +50,9 @@ fn parse_args() -> Args {
 
     let use_s3 = !matches.is_present("local");
 
-    let site_name = matches
-        .value_of("site-name")
-        .map(|l| l.into())
-        .or_else(|| env::var(common::SITE_NAME_VAR).ok())
-        .expect("Missing site name");
+    let site_name = matches.value_of("site-name").map(|l| l.into()).unwrap();
 
-    let site_url = matches
-        .value_of("site-url")
-        .map(|l| l.into())
-        .or_else(|| env::var(common::SITE_URL_VAR).ok())
-        .expect("Missing site URL");
+    let site_url = matches.value_of("site-url").map(|l| l.into()).unwrap();
 
     Args {
         verbose,
