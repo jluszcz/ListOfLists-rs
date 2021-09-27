@@ -2,7 +2,6 @@ use anyhow::Result;
 use clap::{App, Arg};
 use list_of_lists::{common, updater};
 use log::debug;
-use std::env;
 
 #[derive(Debug)]
 struct Args {
@@ -34,24 +33,34 @@ fn parse_args() -> Args {
             Arg::with_name("site-name")
                 .short("s")
                 .long("site-name")
+                .required(true)
+                .env(common::SITE_NAME_VAR)
                 .help("Site name, e.g. foolist."),
         )
         .arg(
             Arg::with_name("site-url")
                 .short("u")
                 .long("site-url")
+                .required(true)
+                .env(common::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )
         .arg(
             Arg::with_name("dropbox-key")
                 .short("k")
                 .long("db-key")
+                .required(true)
+                .env(common::DB_KEY_VAR)
+                .hide_env_values(true)
                 .help("Access key used to access Dropbox."),
         )
         .arg(
             Arg::with_name("dropbox-path")
                 .short("p")
                 .long("db-path")
+                .required(true)
+                .env(common::DB_PATH_VAR)
+                .hide_env_values(true)
                 .help("Path of list file within Dropbox."),
         )
         .get_matches();
@@ -60,29 +69,13 @@ fn parse_args() -> Args {
 
     let force = matches.is_present("force");
 
-    let site_name = matches
-        .value_of("site-name")
-        .map(|l| l.into())
-        .or_else(|| env::var(common::SITE_NAME_VAR).ok())
-        .expect("Missing site name");
+    let site_name = matches.value_of("site-name").map(|l| l.into()).unwrap();
 
-    let site_url = matches
-        .value_of("site-url")
-        .map(|l| l.into())
-        .or_else(|| env::var(common::SITE_URL_VAR).ok())
-        .expect("Missing site URL");
+    let site_url = matches.value_of("site-url").map(|l| l.into()).unwrap();
 
-    let dropbox_key = matches
-        .value_of("dropbox-key")
-        .map(|l| l.into())
-        .or_else(|| env::var(common::DB_KEY_VAR).ok())
-        .expect("Missing Dropbox key");
+    let dropbox_key = matches.value_of("dropbox-key").map(|l| l.into()).unwrap();
 
-    let dropbox_path = matches
-        .value_of("dropbox-path")
-        .map(|l| l.into())
-        .or_else(|| env::var(common::DB_PATH_VAR).ok())
-        .expect("Missing Dropbox path");
+    let dropbox_path = matches.value_of("dropbox-path").map(|l| l.into()).unwrap();
 
     Args {
         verbose,
