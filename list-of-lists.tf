@@ -258,6 +258,7 @@ data "aws_iam_policy_document" "cw_logs" {
 }
 
 resource "aws_iam_policy" "cw_logs" {
+  name   = "${var.site_name}.cw_logs"
   policy = data.aws_iam_policy_document.cw_logs.json
 }
 
@@ -289,6 +290,7 @@ data "aws_iam_policy_document" "generator_s3" {
 }
 
 resource "aws_iam_policy" "generator_s3" {
+  name   = "${var.site_name}.generator_s3"
   policy = data.aws_iam_policy_document.generator_s3.json
 }
 
@@ -310,6 +312,7 @@ data "aws_iam_policy_document" "updater_s3" {
 }
 
 resource "aws_iam_policy" "updater_s3" {
+  name   = "${var.site_name}.updater_s3"
   policy = data.aws_iam_policy_document.updater_s3.json
 }
 
