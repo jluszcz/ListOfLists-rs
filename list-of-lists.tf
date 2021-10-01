@@ -340,6 +340,7 @@ resource "aws_lambda_function" "lambda_generator" {
   s3_bucket     = var.code_bucket
   s3_key        = "generator.zip"
   role          = aws_iam_role.lambda_generator.arn
+  architectures = ["arm64"]
   runtime       = "provided.al2"
   handler       = "ignored"
   publish       = "false"
@@ -380,6 +381,7 @@ resource "aws_lambda_function" "lambda_updater" {
   s3_bucket     = var.code_bucket
   s3_key        = "updater.zip"
   role          = aws_iam_role.lambda_updater.arn
+  architectures = ["arm64"]
   runtime       = "provided.al2"
   handler       = "ignored"
   publish       = "false"
