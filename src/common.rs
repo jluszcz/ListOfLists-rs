@@ -51,6 +51,8 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
         .level_for("tracing", LevelFilter::Warn)
         .level_for("reqwest", LevelFilter::Warn)
         .level_for("html5ever", LevelFilter::Warn)
+        .level_for("aws_config", LevelFilter::Warn)
+        .level_for("h2", LevelFilter::Warn)
         .chain(std::io::stdout())
         .apply();
 
