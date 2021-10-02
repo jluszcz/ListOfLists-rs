@@ -33,6 +33,7 @@ fn parse_args() -> Args {
                 .short("s")
                 .long("site-name")
                 .required(true)
+                .takes_value(true)
                 .env(common::SITE_NAME_VAR)
                 .help("Site name, e.g. foolist."),
         )
@@ -41,6 +42,7 @@ fn parse_args() -> Args {
                 .short("u")
                 .long("site-url")
                 .required(true)
+                .takes_value(true)
                 .env(common::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )

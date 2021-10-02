@@ -34,6 +34,7 @@ fn parse_args() -> Args {
                 .short("s")
                 .long("site-name")
                 .required(true)
+                .takes_value(true)
                 .env(common::SITE_NAME_VAR)
                 .help("Site name, e.g. foolist."),
         )
@@ -42,6 +43,7 @@ fn parse_args() -> Args {
                 .short("u")
                 .long("site-url")
                 .required(true)
+                .takes_value(true)
                 .env(common::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )
@@ -50,6 +52,7 @@ fn parse_args() -> Args {
                 .short("k")
                 .long("db-key")
                 .required(true)
+                .takes_value(true)
                 .env(common::DB_KEY_VAR)
                 .hide_env_values(true)
                 .help("Access key used to access Dropbox."),
@@ -59,6 +62,7 @@ fn parse_args() -> Args {
                 .short("p")
                 .long("db-path")
                 .required(true)
+                .takes_value(true)
                 .env(common::DB_PATH_VAR)
                 .hide_env_values(true)
                 .help("Path of list file within Dropbox."),
