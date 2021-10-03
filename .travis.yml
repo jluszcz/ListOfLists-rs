@@ -1,4 +1,5 @@
 language: rust
+arch: arm64
 cache: cargo
 before_script:
   - rustup component add clippy
