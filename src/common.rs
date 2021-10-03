@@ -44,15 +44,8 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
                 message
             ))
         })
-        .level(level)
-        .level_for("hyper", LevelFilter::Warn)
-        .level_for("rustls", LevelFilter::Warn)
-        .level_for("smithy_http_tower", LevelFilter::Warn)
-        .level_for("tracing", LevelFilter::Warn)
-        .level_for("reqwest", LevelFilter::Warn)
-        .level_for("html5ever", LevelFilter::Warn)
-        .level_for("aws_config", LevelFilter::Warn)
-        .level_for("h2", LevelFilter::Warn)
+        .level(LevelFilter::Warn)
+        .level_for("list_of_lists", level)
         .chain(std::io::stdout())
         .apply();
 
