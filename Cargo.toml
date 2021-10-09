@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0"
 aws-config = { git = "https://github.com/awslabs/aws-sdk-rust", tag = "v0.0.19-alpha" }
-bytes = "1.0"
+bytes = "1.1"
 chrono = "0.4"
 chrono-tz = "0.6"
 clap = "2.33"
@@ -21,7 +21,7 @@ s3 = { git = "https://github.com/awslabs/aws-sdk-rust", tag = "v0.0.19-alpha", p
 serde = "1.0"
 serde_json = "1.0"
 tera = "1.12"
-tokio = { version = "1.11", features = ["full"] }
+tokio = { version = "1.12", features = ["full"] }
 
 [[bin]]
 name = "updater"
