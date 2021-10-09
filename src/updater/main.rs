@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{App, Arg};
-use list_of_lists::{common, updater};
+use list_of_lists::updater;
 use log::debug;
 
 #[derive(Debug)]
@@ -35,7 +35,7 @@ fn parse_args() -> Args {
                 .long("site-name")
                 .required(true)
                 .takes_value(true)
-                .env(common::SITE_NAME_VAR)
+                .env(list_of_lists::SITE_NAME_VAR)
                 .help("Site name, e.g. foolist."),
         )
         .arg(
@@ -44,7 +44,7 @@ fn parse_args() -> Args {
                 .long("site-url")
                 .required(true)
                 .takes_value(true)
-                .env(common::SITE_URL_VAR)
+                .env(list_of_lists::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )
         .arg(
@@ -53,7 +53,7 @@ fn parse_args() -> Args {
                 .long("db-key")
                 .required(true)
                 .takes_value(true)
-                .env(common::DB_KEY_VAR)
+                .env(list_of_lists::DB_KEY_VAR)
                 .hide_env_values(true)
                 .help("Access key used to access Dropbox."),
         )
@@ -63,7 +63,7 @@ fn parse_args() -> Args {
                 .long("db-path")
                 .required(true)
                 .takes_value(true)
-                .env(common::DB_PATH_VAR)
+                .env(list_of_lists::DB_PATH_VAR)
                 .hide_env_values(true)
                 .help("Path of list file within Dropbox."),
         )
@@ -94,7 +94,7 @@ fn parse_args() -> Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = parse_args();
-    common::set_up_logger(args.verbose)?;
+    list_of_lists::set_up_logger(args.verbose)?;
     debug!("{:?}", args);
 
     updater::try_update_list_file(

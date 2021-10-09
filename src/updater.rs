@@ -1,4 +1,4 @@
-use crate::common;
+use crate::s3util;
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use log::{debug, info, trace};
@@ -188,7 +188,7 @@ pub async fn try_update_list_file(
         if db_md5 == e_tag && !force {
             info!("{} is already up to date, skipping", s3_object_name);
         } else {
-            common::s3util::put(
+            s3util::put(
                 &s3_client,
                 &s3_bucket_name,
                 &s3_object_name,

@@ -1,4 +1,4 @@
-use crate::common::{self, ListOfLists};
+use crate::{s3util, ListOfLists};
 use anyhow::Result;
 use html5minify::Minify;
 use log::debug;
@@ -46,7 +46,7 @@ impl Io {
                 generator_bucket,
                 ..
             } => {
-                let bytes = common::s3util::get(s3_client, generator_bucket, target).await?;
+                let bytes = s3util::get(s3_client, generator_bucket, target).await?;
                 Ok(str::from_utf8(&bytes)?.into())
             }
 
@@ -64,7 +64,7 @@ impl Io {
                 s3_client,
                 site_bucket,
                 ..
-            } => common::s3util::put(s3_client, site_bucket, target, "text/html", content).await?,
+            } => s3util::put(s3_client, site_bucket, target, "text/html", content).await?,
 
             Io::LocalFile { path } => {
                 let path = path.join(target);
@@ -82,7 +82,7 @@ impl Io {
                 s3_client,
                 site_bucket,
                 ..
-            } => common::s3util::exists(s3_client, site_bucket, target).await,
+            } => s3util::exists(s3_client, site_bucket, target).await,
 
             Io::LocalFile { path } => {
                 let path = path.join(target);

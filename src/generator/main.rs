@@ -1,6 +1,5 @@
 use anyhow::Result;
 use clap::{App, Arg};
-use list_of_lists::common;
 use list_of_lists::generator;
 use log::debug;
 
@@ -34,7 +33,7 @@ fn parse_args() -> Args {
                 .long("site-name")
                 .required(true)
                 .takes_value(true)
-                .env(common::SITE_NAME_VAR)
+                .env(list_of_lists::SITE_NAME_VAR)
                 .help("Site name, e.g. foolist."),
         )
         .arg(
@@ -43,7 +42,7 @@ fn parse_args() -> Args {
                 .long("site-url")
                 .required(true)
                 .takes_value(true)
-                .env(common::SITE_URL_VAR)
+                .env(list_of_lists::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )
         .get_matches();
@@ -67,7 +66,7 @@ fn parse_args() -> Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = parse_args();
-    common::set_up_logger(args.verbose)?;
+    list_of_lists::set_up_logger(args.verbose)?;
     debug!("{:?}", args);
 
     generator::update_site(args.site_name, args.site_url, args.use_s3).await
