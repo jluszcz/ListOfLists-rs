@@ -14,6 +14,7 @@ pub static DB_PATH_VAR: &str = "LOL_DB_PATH";
 pub type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct ListOfLists {
     pub title: String,
     pub lists: Vec<List>,
@@ -21,6 +22,7 @@ pub struct ListOfLists {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct List {
     pub title: String,
 
@@ -125,5 +127,63 @@ pub mod s3util {
                 false
             }
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    const EXAMPLE_LIST: &str = r#"
+    {
+        "title": "The List",
+        "lists": [
+            {
+                "title": "Letters",
+                "hidden": true,
+                "list": [
+                    "A",
+                    "B",
+                    "C"
+                ]
+            },
+            {
+                "title": "Numbers",
+                "list": [
+                    "1",
+                    "2",
+                    "3"
+                ]
+            }
+        ]
+    }
+    "#;
+
+    impl List {
+        fn new(title: &str, hidden: bool, list: &[&str]) -> Self {
+            Self {
+                title: title.to_string(),
+                hidden,
+                list: list.iter().map(|s| s.to_string()).collect(),
+            }
+        }
+    }
+
+    #[test]
+    fn test_list_of_lists_serde() -> Result<()> {
+        let list_of_lists = ListOfLists {
+            title: "The List".to_string(),
+            card_image_url: None,
+            lists: vec![
+                List::new("Letters", true, &vec!["A", "B", "C"]),
+                List::new("Numbers", false, &vec!["1", "2", "3"]),
+            ],
+        };
+
+        let deserialized = serde_json::from_str(EXAMPLE_LIST)?;
+
+        assert_eq!(list_of_lists, deserialized);
+
+        Ok(())
     }
 }
