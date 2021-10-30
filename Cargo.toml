@@ -20,7 +20,7 @@ reqwest = { version = "0.11", features = ["gzip", "json"] }
 s3 = { git = "https://github.com/awslabs/aws-sdk-rust", tag = "v0.0.22-alpha", package = "aws-sdk-s3" }
 serde = "1.0"
 serde_json = "1.0"
-tera = "1.12"
+tera = "1.13"
 tokio = { version = "1.12", features = ["full"] }
 
 [[bin]]
