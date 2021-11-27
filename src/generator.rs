@@ -14,7 +14,7 @@ const SITE_INDEX: &str = "index.html";
 
 enum Io {
     S3 {
-        s3_client: s3::Client,
+        s3_client: aws_sdk_s3::Client,
         generator_bucket: String,
         site_bucket: String,
     },
@@ -28,7 +28,7 @@ impl Io {
         if use_s3 {
             let aws_config = aws_config::load_from_env().await;
             Self::S3 {
-                s3_client: s3::Client::new(&aws_config),
+                s3_client: aws_sdk_s3::Client::new(&aws_config),
                 generator_bucket: format!("{}-generator", site_url),
                 site_bucket: site_url,
             }

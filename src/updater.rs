@@ -99,7 +99,7 @@ async fn get_dropbox_metadata(dropbox_key: &str, dropbox_path: &str) -> Result<D
 }
 
 async fn get_s3_metadata(
-    s3_client: &s3::Client,
+    s3_client: &aws_sdk_s3::Client,
     bucket_name: &str,
     object_name: &str,
 ) -> Result<(String, DateTime<Utc>)> {
@@ -119,7 +119,12 @@ async fn get_s3_metadata(
 
     let last_modified_time = response
         .last_modified
-        .map(|t| t.to_chrono())
+        .map(|t| {
+            DateTime::<Utc>::from_utc(
+                NaiveDateTime::from_timestamp(t.secs(), t.subsec_nanos()),
+                Utc,
+            )
+        })
         .ok_or_else(|| anyhow!("missing last_modified"))?;
 
     debug!(
@@ -165,7 +170,7 @@ pub async fn try_update_list_file(
     force: bool,
 ) -> Result<()> {
     let aws_config = aws_config::load_from_env().await;
-    let s3_client = s3::Client::new(&aws_config);
+    let s3_client = aws_sdk_s3::Client::new(&aws_config);
 
     let s3_bucket_name = format!("{}-generator", site_url);
     let s3_object_name = format!("{}.json", site_name);

@@ -59,12 +59,12 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
 
 pub mod s3util {
     use super::*;
+    use aws_sdk_s3::{ByteStream, SdkError};
     use bytes::Bytes;
     use log::{debug, warn};
-    use s3::{ByteStream, SdkError};
 
     pub async fn get(
-        s3_client: &s3::Client,
+        s3_client: &aws_sdk_s3::Client,
         bucket_name: &str,
         object_name: &str,
     ) -> Result<Bytes> {
@@ -85,7 +85,7 @@ pub mod s3util {
     }
 
     pub async fn put(
-        s3_client: &s3::Client,
+        s3_client: &aws_sdk_s3::Client,
         bucket_name: &str,
         object_name: &str,
         content_type: &str,
@@ -106,7 +106,7 @@ pub mod s3util {
     }
 
     pub async fn exists(
-        s3_client: &s3::Client,
+        s3_client: &aws_sdk_s3::Client,
         bucket_name: &str,
         object_name: &str,
     ) -> Result<bool> {
