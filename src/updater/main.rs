@@ -94,7 +94,7 @@ fn parse_args() -> Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = parse_args();
-    list_of_lists::set_up_logger(args.verbose)?;
+    list_of_lists::set_up_logger(module_path!(), args.verbose)?;
     debug!("{:?}", args);
 
     updater::try_update_list_file(

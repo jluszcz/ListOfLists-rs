@@ -11,7 +11,7 @@ async fn main() -> Result<(), LambdaError> {
 }
 
 async fn function(event: Value, _: Context) -> Result<Value, LambdaError> {
-    list_of_lists::set_up_logger(false)?;
+    list_of_lists::set_up_logger(module_path!(), false)?;
 
     let site_name = env::var(list_of_lists::SITE_NAME_VAR)?;
     let site_url = env::var(list_of_lists::SITE_URL_VAR)?;

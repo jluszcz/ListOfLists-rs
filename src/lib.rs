@@ -1,6 +1,7 @@
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::error::Error;
 
 pub mod generator;
@@ -32,7 +33,10 @@ pub struct List {
     pub list: Vec<String>,
 }
 
-pub fn set_up_logger(verbose: bool) -> Result<()> {
+pub fn set_up_logger<T>(calling_module: T, verbose: bool) -> Result<()>
+where
+    T: Into<Cow<'static, str>>,
+{
     let level = if verbose {
         LevelFilter::Debug
     } else {
@@ -50,7 +54,9 @@ pub fn set_up_logger(verbose: bool) -> Result<()> {
             ))
         })
         .level(LevelFilter::Warn)
+        .level_for("aws_config::profile", LevelFilter::Error)
         .level_for("list_of_lists", level)
+        .level_for(calling_module, level)
         .chain(std::io::stdout())
         .apply();
 
