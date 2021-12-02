@@ -6,9 +6,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-aws-config = "0.0.26-alpha"
-aws-sdk-s3 = "0.0.26-alpha"
-aws-smithy-types-convert = { version = "0.30.0-alpha", features = ["convert-chrono"] }
+aws-config = "0.2"
+aws-sdk-s3 = "0.2"
+aws-smithy-types-convert = { version = "0.32", features = ["convert-chrono"] }
 bytes = "1.1"
 chrono = "0.4"
 chrono-tz = "0.6"
