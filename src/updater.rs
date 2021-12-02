@@ -1,5 +1,6 @@
 use crate::s3util;
 use anyhow::{anyhow, Result};
+use aws_smithy_types_convert::date_time::DateTimeExt;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use log::{debug, info, trace};
 use reqwest::header::HeaderMap;
@@ -119,12 +120,7 @@ async fn get_s3_metadata(
 
     let last_modified_time = response
         .last_modified
-        .map(|t| {
-            DateTime::<Utc>::from_utc(
-                NaiveDateTime::from_timestamp(t.secs(), t.subsec_nanos()),
-                Utc,
-            )
-        })
+        .map(|t| t.to_chrono_utc())
         .ok_or_else(|| anyhow!("missing last_modified"))?;
 
     debug!(
