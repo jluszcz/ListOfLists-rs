@@ -16,20 +16,20 @@ fn parse_args() -> Args {
         .version("0.1")
         .author("Jacob Luszcz")
         .arg(
-            Arg::with_name("verbose")
-                .short("v")
+            Arg::new("verbose")
+                .short('v')
                 .long("verbose")
                 .help("Verbose mode. Outputs DEBUG and higher log messages."),
         )
         .arg(
-            Arg::with_name("local")
-                .short("l")
+            Arg::new("local")
+                .short('l')
                 .long("local")
                 .help("If provided, use local files rather than S3."),
         )
         .arg(
-            Arg::with_name("site-name")
-                .short("s")
+            Arg::new("site-name")
+                .short('s')
                 .long("site-name")
                 .required(true)
                 .takes_value(true)
@@ -37,8 +37,8 @@ fn parse_args() -> Args {
                 .help("Site name, e.g. foolist."),
         )
         .arg(
-            Arg::with_name("site-url")
-                .short("u")
+            Arg::new("site-url")
+                .short('u')
                 .long("site-url")
                 .required(true)
                 .takes_value(true)

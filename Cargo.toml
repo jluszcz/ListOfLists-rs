@@ -13,7 +13,7 @@ aws-smithy-types-convert = { version = "0.33", features = ["convert-chrono"] }
 bytes = "1.1"
 chrono = "0.4"
 chrono-tz = "0.6"
-clap = "2.34"
+clap = { version = "3.0", features = ["env"] }
 fern = "0.6"
 html5minify = "0.3"
 lambda_runtime = "0.4"
