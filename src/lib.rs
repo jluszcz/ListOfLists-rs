@@ -2,17 +2,11 @@ use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use std::error::Error;
 
 pub mod generator;
-pub mod updater;
 
 pub static SITE_NAME_VAR: &str = "LOL_SITE";
 pub static SITE_URL_VAR: &str = "LOL_SITE_URL";
-pub static DB_KEY_VAR: &str = "LOL_DB_KEY";
-pub static DB_PATH_VAR: &str = "LOL_DB_PATH";
-
-pub type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Eq, PartialEq))]

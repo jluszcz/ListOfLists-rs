@@ -1,7 +1,10 @@
 use lambda_runtime::{handler_fn, Context};
-use list_of_lists::{generator, LambdaError};
+use list_of_lists::generator;
 use serde_json::Value;
 use std::env;
+use std::error::Error;
+
+type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {

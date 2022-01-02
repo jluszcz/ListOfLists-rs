@@ -9,10 +9,6 @@ variable "site_name" {}
 
 variable "site_url" {}
 
-variable "db_access_key" {}
-
-variable "db_file_path" {}
-
 variable "code_bucket" {}
 
 variable "aws_region" {
@@ -245,11 +241,6 @@ resource "aws_iam_role" "lambda_generator" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
-resource "aws_iam_role" "lambda_updater" {
-  name               = "lambda.${var.site_name}.updater"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-}
-
 data "aws_iam_policy_document" "cw_logs" {
   statement {
     actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:Describe*"]
@@ -264,11 +255,6 @@ resource "aws_iam_policy" "cw_logs" {
 
 resource "aws_iam_role_policy_attachment" "generator_cw_logs" {
   role       = aws_iam_role.lambda_generator.name
-  policy_arn = aws_iam_policy.cw_logs.arn
-}
-
-resource "aws_iam_role_policy_attachment" "updater_cw_logs" {
-  role       = aws_iam_role.lambda_updater.name
   policy_arn = aws_iam_policy.cw_logs.arn
 }
 
@@ -297,28 +283,6 @@ resource "aws_iam_policy" "generator_s3" {
 resource "aws_iam_role_policy_attachment" "generator_s3" {
   role       = aws_iam_role.lambda_generator.name
   policy_arn = aws_iam_policy.generator_s3.arn
-}
-
-data "aws_iam_policy_document" "updater_s3" {
-  statement {
-    actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.generator.arn}/${var.site_name}.json"]
-  }
-
-  statement {
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.generator.arn}/*"]
-  }
-}
-
-resource "aws_iam_policy" "updater_s3" {
-  name   = "${var.site_name}.updater_s3"
-  policy = data.aws_iam_policy_document.updater_s3.json
-}
-
-resource "aws_iam_role_policy_attachment" "updater_s3" {
-  role       = aws_iam_role.lambda_updater.name
-  policy_arn = aws_iam_policy.updater_s3.arn
 }
 
 resource "aws_s3_bucket_notification" "generator_notification" {
@@ -355,49 +319,6 @@ resource "aws_lambda_function" "lambda_generator" {
     variables = {
       LOL_SITE     = var.site_name
       LOL_SITE_URL = var.site_url
-    }
-  }
-}
-
-resource "aws_cloudwatch_event_rule" "updater_schedule" {
-  name                = "${var.site_name}-updater-schedule"
-  description         = "Update ${var.site_name} periodically"
-  schedule_expression = "cron(0 5 * * ? *)"
-}
-
-resource "aws_lambda_permission" "generator_allow_cloudwatch" {
-  statement_id  = "${var.site_name}-AllowExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_updater.arn
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.updater_schedule.arn
-}
-
-resource "aws_cloudwatch_event_target" "updater_event_target" {
-  target_id = var.site_name
-  rule      = aws_cloudwatch_event_rule.updater_schedule.name
-  arn       = aws_lambda_function.lambda_updater.arn
-}
-
-resource "aws_lambda_function" "lambda_updater" {
-  function_name = "${var.site_name}-updater"
-  s3_bucket     = var.code_bucket
-  s3_key        = "updater.zip"
-  role          = aws_iam_role.lambda_updater.arn
-  architectures = ["arm64"]
-  runtime       = "provided.al2"
-  handler       = "ignored"
-  publish       = "false"
-  description   = "Update ${var.site_url}"
-  timeout       = 5
-  memory_size   = 128
-
-  environment {
-    variables = {
-      LOL_SITE     = var.site_name
-      LOL_SITE_URL = var.site_url
-      LOL_DB_KEY   = var.db_access_key
-      LOL_DB_PATH  = var.db_file_path
     }
   }
 }
