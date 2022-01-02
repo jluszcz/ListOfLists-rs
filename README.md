@@ -57,5 +57,5 @@ export TF_VAR_site_url=${LOL_SITE_URL}
 ### Update List
 
 1. Upload a `${LOL_SITE}.json` to `s3://${LOL_SITE_URL}-generator/${LOL_SITE}.json`
-  - See [moviel.ist](https://github.com/jluszcz/MovieList) or [burgerl.ist](https://github.com/jluszcz/BurgerList) for 
+  - See [moviel.ist](https://github.com/jluszcz/MovieList) or [burgerl.ist](https://github.com/jluszcz/BurgerList) for
     examples of how to automate this with [GitHub actions](https://github.com/features/actions).
