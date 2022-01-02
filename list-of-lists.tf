@@ -402,3 +402,23 @@ resource "aws_lambda_function" "lambda_updater" {
   }
 }
 
+resource "aws_iam_user" "github" {
+  name = "github.${var.site_name}"
+}
+
+data "aws_iam_policy_document" "github" {
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.generator.arn}/${var.site_name}.json"]
+  }
+}
+
+resource "aws_iam_policy" "github" {
+  name   = "${var.site_name}.github"
+  policy = data.aws_iam_policy_document.github.json
+}
+
+resource "aws_iam_user_policy_attachment" "github" {
+  user       = aws_iam_user.github.name
+  policy_arn = aws_iam_policy.github.arn
+}
