@@ -6,13 +6,13 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-aws-config = "0.2"
-aws-sdk-s3 = "0.2"
-aws-smithy-types-convert = { version = "0.32", features = ["convert-chrono"] }
+aws-config = "0.3"
+aws-sdk-s3 = "0.3"
+aws-smithy-types-convert = { version = "0.33", features = ["convert-chrono"] }
 bytes = "1.1"
 chrono = "0.4"
 chrono-tz = "0.6"
-clap = "2.33"
+clap = "2.34"
 fern = "0.6"
 html5minify = "0.3"
 lambda_runtime = "0.4"
@@ -22,7 +22,7 @@ reqwest = { version = "0.11", features = ["gzip", "json"] }
 serde = "1.0"
 serde_json = "1.0"
 tera = "1.15"
-tokio = { version = "1.14", features = ["full"] }
+tokio = { version = "1.15", features = ["full"] }
 
 [[bin]]
 name = "updater"
