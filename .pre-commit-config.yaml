@@ -7,4 +7,6 @@ repos:
     -   id: check-yaml
     -   id: detect-aws-credentials
     -   id: end-of-file-fixer
+    -   id: file-contents-sorter
+        files: .gitignore
     -   id: trailing-whitespace
