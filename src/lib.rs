@@ -16,19 +16,6 @@ pub struct ListOfLists {
     pub card_image_url: Option<String>,
 }
 
-impl ListOfLists {
-    fn remove_hidden(&mut self) {
-        let mut i = 0;
-        while i < self.lists.len() {
-            if self.lists[i].hidden {
-                let _ = self.lists.remove(i);
-            } else {
-                i += 1;
-            }
-        }
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct List {

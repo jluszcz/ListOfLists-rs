@@ -26,38 +26,44 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav nav mr-auto">
+                    {%- set first = true %}
                     {%- for list_item in lists %}
-                    {%- if not list_item['hidden'] %}
-                    {%- if loop.first %}
-                    {%- set active = ' active' %}
-                    {%- else %}
-                    {%- set active = '' %}
-                    {%- endif %}
-                    <li class="nav-item">
-                        <a class="nav-link{{ active }}" data-toggle="tab" href="#{{ list_item['title']|replace(from=' ', to='_') }}">{{ list_item['title'] }}</a>
-                    </li>
-                    {%- endif %}
+                        {%- if list_item['hidden'] %}
+                            {%- continue %}
+                        {%- endif %}
+                        {%- if first %}
+                            {%- set active = ' active' %}
+                            {%- set first = false %}
+                        {%- else %}
+                            {%- set active = '' %}
+                        {%- endif %}
+                        <li class="nav-item">
+                            <a class="nav-link{{ active }}" data-toggle="tab" href="#{{ list_item['title']|replace(from=' ', to='_') }}">{{ list_item['title'] }}</a>
+                        </li>
                     {%- endfor %}
                 </ul> <!-- Navbar Items -->
             </div> <!-- Navbar -->
         </nav>
         <div class="tab-content">
+            {%- set first = true %}
             {%- for list_item in lists %}
-            {%- if not list_item['hidden'] %}
-            {%- if loop.first %}
-            {%- set active = ' show active' %}
-            {%- else %}
-            {%- set active = '' %}
-            {%- endif %}
-            <div class="tab-pane fade{{ active }}" id="{{ list_item['title']|replace(from=' ', to='_') }}" role="tabpanel">
-                    <h3>{{ list_item['title'] }}</h3>
-                    <ol>
-                        {%- for item in list_item['list'] %}
-                        <li>{{ item }}</li>
-                        {%- endfor %}
-                    </ol>
-            </div>
-            {%- endif %}
+                {%- if list_item['hidden'] %}
+                    {%- continue %}
+                {%- endif %}
+                {%- if first %}
+                    {%- set active = ' show active' %}
+                    {%- set first = false %}
+                {%- else %}
+                    {%- set active = '' %}
+                {%- endif %}
+                <div class="tab-pane fade{{ active }}" id="{{ list_item['title']|replace(from=' ', to='_') }}" role="tabpanel">
+                        <h3>{{ list_item['title'] }}</h3>
+                        <ol>
+                            {%- for item in list_item['list'] %}
+                            <li>{{ item }}</li>
+                            {%- endfor %}
+                        </ol>
+                </div>
             {%- endfor %}
         </div> <!-- Tab Content -->
     </div> <!-- Container -->

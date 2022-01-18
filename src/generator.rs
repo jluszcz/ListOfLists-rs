@@ -126,9 +126,6 @@ pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> R
         list_of_lists.card_image_url = Some(format!("https://{}/images/card.png", site_url));
     }
 
-    // FIXME Filter hidden lists in the template or at deserialization-time
-    list_of_lists.remove_hidden();
-
     debug!("Rendering {}", SITE_INDEX);
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
     debug!("Rendered {}", SITE_INDEX);
