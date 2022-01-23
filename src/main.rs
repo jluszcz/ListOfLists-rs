@@ -5,28 +5,16 @@ use log::debug;
 
 #[derive(Debug)]
 struct Args {
-    verbose: bool,
-    use_s3: bool,
     site_name: String,
     site_url: String,
+    verbose: bool,
+    use_s3: bool,
 }
 
 fn parse_args() -> Args {
     let matches = App::new("ListOfLists-Generator")
         .version("0.1")
         .author("Jacob Luszcz")
-        .arg(
-            Arg::new("verbose")
-                .short('v')
-                .long("verbose")
-                .help("Verbose mode. Outputs DEBUG and higher log messages."),
-        )
-        .arg(
-            Arg::new("local")
-                .short('l')
-                .long("local")
-                .help("If provided, use local files rather than S3."),
-        )
         .arg(
             Arg::new("site-name")
                 .short('s')
@@ -45,21 +33,33 @@ fn parse_args() -> Args {
                 .env(list_of_lists::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )
+        .arg(
+            Arg::new("verbose")
+                .short('v')
+                .long("verbose")
+                .help("Verbose mode. Outputs DEBUG and higher log messages."),
+        )
+        .arg(
+            Arg::new("local")
+                .short('l')
+                .long("local")
+                .help("If provided, use local files rather than S3."),
+        )
         .get_matches();
-
-    let verbose = matches.is_present("verbose");
-
-    let use_s3 = !matches.is_present("local");
 
     let site_name = matches.value_of("site-name").map(|l| l.into()).unwrap();
 
     let site_url = matches.value_of("site-url").map(|l| l.into()).unwrap();
 
+    let verbose = matches.is_present("verbose");
+
+    let use_s3 = !matches.is_present("local");
+
     Args {
-        verbose,
-        use_s3,
         site_name,
         site_url,
+        verbose,
+        use_s3,
     }
 }
 

@@ -6,6 +6,8 @@ use std::error::Error;
 
 type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 
+const USE_S3: bool = true;
+
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {
     let func = handler_fn(function);
@@ -19,7 +21,7 @@ async fn function(event: Value, _: Context) -> Result<Value, LambdaError> {
     let site_name = env::var(list_of_lists::SITE_NAME_VAR)?;
     let site_url = env::var(list_of_lists::SITE_URL_VAR)?;
 
-    generator::update_site(site_name, site_url, true).await?;
+    generator::update_site(site_name, site_url, USE_S3).await?;
 
     Ok(event)
 }
