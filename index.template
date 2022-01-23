@@ -33,7 +33,7 @@
                         {%- endif %}
                         {%- if first %}
                             {%- set active = ' active' %}
-                            {%- set first = false %}
+                            {%- set_global first = false %}
                         {%- else %}
                             {%- set active = '' %}
                         {%- endif %}
@@ -52,7 +52,7 @@
                 {%- endif %}
                 {%- if first %}
                     {%- set active = ' show active' %}
-                    {%- set first = false %}
+                    {%- set_global first = false %}
                 {%- else %}
                     {%- set active = '' %}
                 {%- endif %}
