@@ -221,11 +221,6 @@ resource "aws_cloudwatch_log_group" "generator" {
   retention_in_days = "7"
 }
 
-resource "aws_cloudwatch_log_group" "updater" {
-  name              = "/aws/lambda/${var.site_name}-updater"
-  retention_in_days = "7"
-}
-
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
     principals {
