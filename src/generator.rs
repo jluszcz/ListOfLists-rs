@@ -111,7 +111,12 @@ async fn card_image_exists(io: &Io) -> Result<bool> {
     io.exists("images/card.png").await
 }
 
-pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> Result<()> {
+pub async fn update_site(
+    site_name: String,
+    site_url: String,
+    use_s3: bool,
+    minify: bool,
+) -> Result<()> {
     let mut tera = Tera::default();
 
     let io = Io::new(site_url.clone(), use_s3).await;
@@ -130,20 +135,26 @@ pub async fn update_site(site_name: String, site_url: String, use_s3: bool) -> R
     let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
     debug!("Rendered {}", SITE_INDEX);
 
-    let original_size = site.len();
-    debug!(
-        "Minifying {} (original size: {})",
-        SITE_INDEX, original_size
-    );
+    let site = if minify {
+        let original_size = site.len();
+        debug!(
+            "Minifying {} (original size: {})",
+            SITE_INDEX, original_size
+        );
 
-    let site = site.minify()?;
+        let site = site.minify()?;
 
-    debug!(
-        "Minified {}: {:.1}% (new size: {})",
-        SITE_INDEX,
-        100.0 * (site.len() as f64 / original_size as f64),
-        site.len()
-    );
+        debug!(
+            "Minified {}: {:.1}% (new size: {})",
+            SITE_INDEX,
+            100.0 * (site.len() as f64 / original_size as f64),
+            site.len()
+        );
+
+        site
+    } else {
+        site.as_bytes().to_vec()
+    };
 
     io.write(SITE_INDEX, &site).await
 }

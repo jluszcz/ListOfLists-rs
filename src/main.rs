@@ -9,6 +9,7 @@ struct Args {
     site_url: String,
     verbose: bool,
     use_s3: bool,
+    minify: bool,
 }
 
 fn parse_args() -> Args {
@@ -45,6 +46,12 @@ fn parse_args() -> Args {
                 .long("local")
                 .help("If provided, use local files rather than S3."),
         )
+        .arg(
+            Arg::new("minify")
+                .short('m')
+                .long("minify")
+                .help("Minify generated site."),
+        )
         .get_matches();
 
     let site_name = matches.value_of("site-name").map(|l| l.into()).unwrap();
@@ -55,11 +62,14 @@ fn parse_args() -> Args {
 
     let use_s3 = !matches.is_present("local");
 
+    let minify = matches.is_present("minify");
+
     Args {
         site_name,
         site_url,
         verbose,
         use_s3,
+        minify,
     }
 }
 
@@ -69,5 +79,5 @@ async fn main() -> Result<()> {
     list_of_lists::set_up_logger(module_path!(), args.verbose)?;
     debug!("{:?}", args);
 
-    generator::update_site(args.site_name, args.site_url, args.use_s3).await
+    generator::update_site(args.site_name, args.site_url, args.use_s3, args.minify).await
 }
