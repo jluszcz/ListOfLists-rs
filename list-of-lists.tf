@@ -27,9 +27,6 @@ provider "aws" {
 
 resource "aws_s3_bucket" "site" {
   bucket = var.site_url
-  website {
-    index_document = "index.html"
-  }
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
@@ -39,6 +36,14 @@ resource "aws_s3_bucket_public_access_block" "site" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_website_configuration" "site" {
+  bucket = aws_s3_bucket.site.id
+
+  index_document {
+    suffix = "index.html"
+  }
 }
 
 data "aws_iam_policy_document" "site" {
@@ -68,14 +73,14 @@ resource "aws_s3_bucket_policy" "site" {
   policy = data.aws_iam_policy_document.site.json
 }
 
-resource "aws_s3_bucket_object" "favicon" {
+resource "aws_s3_object" "favicon" {
   bucket = aws_s3_bucket.site.id
   key    = "images/favicon.ico"
   source = "buckets/${var.site_url}/images/favicon.ico"
   etag   = filemd5("buckets/${var.site_url}/images/favicon.ico")
 }
 
-resource "aws_s3_bucket_object" "card_image" {
+resource "aws_s3_object" "card_image" {
   count  = fileexists("buckets/${var.site_url}/images/card.png") ? 1 : 0
   bucket = aws_s3_bucket.site.id
   key    = "images/card.png"
@@ -180,7 +185,7 @@ resource "aws_s3_bucket_public_access_block" "generator" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_object" "index_template" {
+resource "aws_s3_object" "index_template" {
   bucket = aws_s3_bucket.generator.id
   key    = "index.template"
   source = "index.template"
