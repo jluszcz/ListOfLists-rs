@@ -58,7 +58,7 @@ where
 
 pub mod s3util {
     use super::*;
-    use aws_sdk_s3::{ByteStream, SdkError};
+    use aws_sdk_s3::types::{ByteStream, SdkError};
     use bytes::Bytes;
     use log::{debug, warn};
 

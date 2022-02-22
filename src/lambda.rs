@@ -1,6 +1,6 @@
-use lambda_runtime::{handler_fn, Context};
+use lambda_runtime::{service_fn, LambdaEvent};
 use list_of_lists::generator;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::env;
 use std::error::Error;
 
@@ -11,12 +11,12 @@ const MINIFY: bool = true;
 
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {
-    let func = handler_fn(function);
+    let func = service_fn(function);
     lambda_runtime::run(func).await?;
     Ok(())
 }
 
-async fn function(event: Value, _: Context) -> Result<Value, LambdaError> {
+async fn function(_: LambdaEvent<Value>) -> Result<Value, LambdaError> {
     list_of_lists::set_up_logger(module_path!(), false)?;
 
     let site_name = env::var(list_of_lists::SITE_NAME_VAR)?;
@@ -24,5 +24,5 @@ async fn function(event: Value, _: Context) -> Result<Value, LambdaError> {
 
     generator::update_site(site_name, site_url, USE_S3, MINIFY).await?;
 
-    Ok(event)
+    Ok(json!({}))
 }

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::{Arg, Command};
 use list_of_lists::generator;
 use log::debug;
 
@@ -13,7 +13,7 @@ struct Args {
 }
 
 fn parse_args() -> Args {
-    let matches = App::new("ListOfLists-Generator")
+    let matches = Command::new("ListOfLists-Generator")
         .version("0.1")
         .author("Jacob Luszcz")
         .arg(
