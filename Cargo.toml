@@ -7,9 +7,9 @@ default-run = "generator"
 
 [dependencies]
 anyhow = "1.0"
-aws-config = "0.7"
-aws-sdk-s3 = "0.7"
-aws-smithy-types-convert = { version = "0.37", features = ["convert-chrono"] }
+aws-config = "0.8"
+aws-sdk-s3 = "0.8"
+aws-smithy-types-convert = { version = "0.38", features = ["convert-chrono"] }
 bytes = "1.1"
 chrono = "0.4"
 chrono-tz = "0.6"
