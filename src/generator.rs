@@ -2,11 +2,11 @@ use crate::{s3util, ListOfLists};
 use anyhow::Result;
 use html5minify::Minify;
 use log::debug;
+use minijinja::Environment;
 use std::{
     path::{Path, PathBuf},
     str,
 };
-use tera::{Context, Tera};
 use tokio::fs;
 
 const SITE_INDEX_TEMPLATE: &str = "index.template";
@@ -93,11 +93,8 @@ impl Io {
     }
 }
 
-async fn read_template(io: &Io, tera: &mut Tera) -> Result<()> {
-    let template_content = io.read(SITE_INDEX_TEMPLATE).await?;
-    tera.add_raw_template(SITE_INDEX, template_content.as_str())?;
-
-    Ok(())
+async fn read_template(io: &Io) -> Result<String> {
+    io.read(SITE_INDEX_TEMPLATE).await
 }
 
 async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
@@ -117,12 +114,10 @@ pub async fn update_site(
     use_s3: bool,
     minify: bool,
 ) -> Result<()> {
-    let mut tera = Tera::default();
-
     let io = Io::new(site_url.clone(), use_s3).await;
 
-    let (_, mut list_of_lists, card_image_exists) = tokio::try_join!(
-        read_template(&io, &mut tera),
+    let (template, mut list_of_lists, card_image_exists) = tokio::try_join!(
+        read_template(&io),
         read_list(&io, &site_name),
         card_image_exists(&io),
     )?;
@@ -131,8 +126,13 @@ pub async fn update_site(
         list_of_lists.card_image_url = Some(format!("https://{}/images/card.png", site_url));
     }
 
+    let mut env = Environment::new();
+    env.add_template(SITE_INDEX, &template)?;
+
+    let template = env.get_template(SITE_INDEX)?;
+
     debug!("Rendering {}", SITE_INDEX);
-    let site = tera.render(SITE_INDEX, &Context::from_serialize(list_of_lists)?)?;
+    let site = template.render(&list_of_lists)?;
     debug!("Rendered {}", SITE_INDEX);
 
     let site = if minify {
