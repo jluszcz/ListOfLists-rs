@@ -29,7 +29,7 @@ impl Io {
             let aws_config = aws_config::load_from_env().await;
             Self::S3 {
                 s3_client: aws_sdk_s3::Client::new(&aws_config),
-                generator_bucket: format!("{}-generator", site_url),
+                generator_bucket: format!("{site_url}-generator"),
                 site_bucket: site_url,
             }
         } else {
@@ -98,7 +98,7 @@ async fn read_template(io: &Io) -> Result<String> {
 }
 
 async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
-    let content = io.read(&format!("{}.json", site_name)).await?;
+    let content = io.read(&format!("{site_name}.json")).await?;
     let list_of_lists: ListOfLists = serde_json::from_str(content.as_str())?;
 
     Ok(list_of_lists)
@@ -123,7 +123,7 @@ pub async fn update_site(
     )?;
 
     if card_image_exists {
-        list_of_lists.card_image_url = Some(format!("https://{}/images/card.png", site_url));
+        list_of_lists.card_image_url = Some(format!("https://{site_url}/images/card.png"));
     }
 
     let mut env = Environment::new();
