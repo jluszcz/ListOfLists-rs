@@ -28,6 +28,18 @@ ListOfLists can generate a static website, hosted on AWS in an S3 bucket, from a
                 "2",
                 "3"
             ]
+        },
+        {
+            "title": "With Tooltips",
+            "list": [
+                "Foo",
+                "Bar",
+                "Baz",
+                {
+                    "item": "Quux",
+                    "tooltip": "Not many people know this one"
+                }
+            ]
         }
     ]
 }

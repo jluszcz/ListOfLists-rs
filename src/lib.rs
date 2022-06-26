@@ -24,7 +24,15 @@ pub struct List {
     #[serde(default)]
     pub hidden: bool,
 
-    pub list: Vec<String>,
+    pub list: Vec<ListItem>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+#[cfg_attr(test, derive(Eq, PartialEq))]
+pub enum ListItem {
+    Item(String),
+    WithTooltip { item: String, tooltip: String },
 }
 
 pub fn set_up_logger<T>(calling_module: T, verbose: bool) -> Result<()>
@@ -131,6 +139,7 @@ pub mod s3util {
 
 #[cfg(test)]
 mod test {
+
     use super::*;
 
     const EXAMPLE_LIST: &str = r#"
@@ -153,6 +162,16 @@ mod test {
                     "2",
                     "3"
                 ]
+            },
+            {
+                "title": "Tooltip",
+                "list": [
+                    "foo",
+                    {
+                        "item": "bar",
+                        "tooltip": "baz"
+                    }
+                ]
             }
         ]
     }
@@ -160,10 +179,28 @@ mod test {
 
     impl List {
         fn new(title: &str, hidden: bool, list: &[&str]) -> Self {
+            let list_items: Vec<ListItem> = list.iter().cloned().map(ListItem::new).collect();
+            Self::from_items(title, hidden, list_items)
+        }
+
+        fn from_items(title: &str, hidden: bool, list: Vec<ListItem>) -> Self {
             Self {
                 title: title.to_string(),
                 hidden,
-                list: list.iter().map(|s| s.to_string()).collect(),
+                list,
+            }
+        }
+    }
+
+    impl ListItem {
+        fn new(item: &str) -> Self {
+            ListItem::Item(item.to_string())
+        }
+
+        fn with_tooltip(item: &str, tooltip: &str) -> Self {
+            ListItem::WithTooltip {
+                item: item.to_string(),
+                tooltip: tooltip.to_string(),
             }
         }
     }
@@ -176,12 +213,20 @@ mod test {
             lists: vec![
                 List::new("Letters", true, &vec!["A", "B", "C"]),
                 List::new("Numbers", false, &vec!["1", "2", "3"]),
+                List::from_items(
+                    "Tooltip",
+                    false,
+                    vec![ListItem::new("foo"), ListItem::with_tooltip("bar", "baz")],
+                ),
             ],
         };
 
-        let deserialized = serde_json::from_str(EXAMPLE_LIST)?;
+        let serialized = serde_json::to_string(&list_of_lists)?;
+        let deserialized: ListOfLists = serde_json::from_str(&serialized)?;
+        let from_example: ListOfLists = serde_json::from_str(EXAMPLE_LIST)?;
 
         assert_eq!(list_of_lists, deserialized);
+        assert_eq!(list_of_lists, from_example);
 
         Ok(())
     }
