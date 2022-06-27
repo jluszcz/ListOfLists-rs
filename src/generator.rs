@@ -1,8 +1,10 @@
 use crate::{s3util, ListOfLists};
 use anyhow::Result;
 use html5minify::Minify;
+use lazy_static::lazy_static;
 use log::debug;
-use minijinja::Environment;
+use minijinja::{Environment, Error, State};
+use regex::Regex;
 use std::{
     path::{Path, PathBuf},
     str,
@@ -11,6 +13,8 @@ use tokio::fs;
 
 const SITE_INDEX_TEMPLATE: &str = "index.template";
 const SITE_INDEX: &str = "index.html";
+
+const DIV_ID_SAFE: &str = "div_id_safe";
 
 enum Io {
     S3 {
@@ -108,6 +112,22 @@ async fn card_image_exists(io: &Io) -> Result<bool> {
     io.exists("images/card.png").await
 }
 
+fn div_id_safe(_: &State, value: String) -> Result<String, Error> {
+    Ok(inner_div_id_safe(value))
+}
+
+fn inner_div_id_safe<S>(value: S) -> String
+where
+    S: Into<String>,
+{
+    lazy_static! {
+        static ref RE: Regex = Regex::new("[^[_0-9A-Za-z]]").unwrap();
+    }
+
+    RE.replace_all(&value.into().replace(' ', "_"), "")
+        .into_owned()
+}
+
 pub async fn update_site(
     site_name: String,
     site_url: String,
@@ -128,6 +148,7 @@ pub async fn update_site(
 
     let mut env = Environment::new();
     env.add_template(SITE_INDEX, &template)?;
+    env.add_filter(DIV_ID_SAFE, div_id_safe);
 
     let template = env.get_template(SITE_INDEX)?;
 
@@ -157,4 +178,18 @@ pub async fn update_site(
     };
 
     io.write(SITE_INDEX, &site).await
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_div_id_safe() {
+        assert_eq!("foo_bar_baz", inner_div_id_safe("foo, bar, baz"));
+        assert_eq!("Foo_Bar_Baz", inner_div_id_safe("Foo, Bar, Baz"));
+        assert_eq!("foo_1234", inner_div_id_safe("foo 1234"));
+        assert_eq!("Foo_1234", inner_div_id_safe("Foo 1234"));
+        assert_eq!("1234", inner_div_id_safe("1234"));
+    }
 }
