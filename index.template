@@ -40,7 +40,7 @@
 
     <div class="tab-content" style="padding-top: 1em;">
     {%- for list_item in lists if not list_item['hidden'] %}
-        <div class="tab-pane container fluid {{ 'active' if loop.first else 'fade' }}" id="tab_{{ list_item['title'] | div_id_safe}}">
+        <div class="tab-pane container fluid {{ 'active' if loop.first else 'fade' }}" id="tab_{{ list_item['title'] | div_id_safe }}">
             <h3>{{ list_item['title'] }}</h3>
             <ol>
             {%- for item in list_item['list'] %}
