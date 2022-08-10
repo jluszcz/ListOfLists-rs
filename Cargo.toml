@@ -7,16 +7,16 @@ default-run = "generator"
 
 [dependencies]
 anyhow = "1.0"
-aws-config = "0.15"
-aws-sdk-s3 = "0.15"
-aws-smithy-types-convert = { version = "0.45", features = ["convert-chrono"] }
+aws-config = "0.47"
+aws-sdk-s3 = "0.17"
+aws-smithy-types-convert = { version = "0.47", features = ["convert-chrono"] }
 bytes = "1.1"
 chrono = "0.4"
 chrono-tz = "0.6"
 clap = { version = "3.2", features = ["env"] }
 fern = "0.6"
 html5minify = "0.3"
-lambda_runtime = "0.5"
+lambda_runtime = "0.6"
 lazy_static = "1.4"
 log = "0.4"
 minijinja = "0.17"
