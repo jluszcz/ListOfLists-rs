@@ -10,7 +10,7 @@ anyhow = "1.0"
 aws-config = "0.47"
 aws-sdk-s3 = "0.17"
 aws-smithy-types-convert = { version = "0.47", features = ["convert-chrono"] }
-bytes = "1.1"
+bytes = "1.2"
 chrono = "0.4"
 chrono-tz = "0.6"
 clap = { version = "3.2", features = ["env"] }
