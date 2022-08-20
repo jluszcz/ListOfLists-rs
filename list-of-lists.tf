@@ -133,6 +133,7 @@ resource "aws_cloudfront_distribution" "site" {
 
   enabled             = true
   is_ipv6_enabled     = true
+  http_version        = "http2and3"
   default_root_object = "index.html"
 
   aliases = ["www.${var.site_url}", var.site_url]
