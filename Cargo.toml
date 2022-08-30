@@ -19,7 +19,7 @@ html5minify = "0.3"
 lambda_runtime = "0.6"
 lazy_static = "1.4"
 log = "0.4"
-minijinja = "0.17"
+minijinja = "0.18"
 regex = "1.6"
 reqwest = { version = "0.11", features = ["gzip", "json"] }
 serde = "1.0"
