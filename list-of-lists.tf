@@ -56,16 +56,6 @@ data "aws_iam_policy_document" "site" {
       identifiers = [aws_cloudfront_origin_access_identity.site_distribution_oai.iam_arn]
     }
   }
-
-  statement {
-    actions   = ["s3:ListBucket"]
-    resources = [aws_s3_bucket.site.arn]
-
-    principals {
-      type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.site_distribution_oai.iam_arn]
-    }
-  }
 }
 
 resource "aws_s3_bucket_policy" "site" {
