@@ -56,6 +56,23 @@ data "aws_iam_policy_document" "site" {
       identifiers = [aws_cloudfront_origin_access_identity.site_distribution_oai.iam_arn]
     }
   }
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.site.arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+
+      values = [aws_cloudfront_distribution.site.arn]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "site" {
@@ -109,6 +126,14 @@ resource "aws_route53_record" "cert_validation" {
 }
 
 resource "aws_cloudfront_origin_access_identity" "site_distribution_oai" {
+}
+
+resource "aws_cloudfront_origin_access_control" "site_distribution_oac" {
+  name                              = var.site_name
+  description                       = "OAC for ${var.site_url}"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "site" {
