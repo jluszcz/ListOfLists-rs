@@ -52,16 +52,6 @@ data "aws_iam_policy_document" "site" {
     resources = ["${aws_s3_bucket.site.arn}/*"]
 
     principals {
-      type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.site_distribution_oai.iam_arn]
-    }
-  }
-
-  statement {
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.site.arn}/*"]
-
-    principals {
       type        = "Service"
       identifiers = ["cloudfront.amazonaws.com"]
     }
@@ -123,10 +113,6 @@ resource "aws_route53_record" "cert_validation" {
   zone_id         = aws_route53_zone.zone.id
   records         = [each.value.record]
   ttl             = 60
-}
-
-# Deprecated
-resource "aws_cloudfront_origin_access_identity" "site_distribution_oai" {
 }
 
 resource "aws_cloudfront_origin_access_control" "site_distribution_oac" {
