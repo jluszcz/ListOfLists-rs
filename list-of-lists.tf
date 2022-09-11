@@ -125,6 +125,7 @@ resource "aws_route53_record" "cert_validation" {
   ttl             = 60
 }
 
+# Deprecated
 resource "aws_cloudfront_origin_access_identity" "site_distribution_oai" {
 }
 
@@ -138,12 +139,9 @@ resource "aws_cloudfront_origin_access_control" "site_distribution_oac" {
 
 resource "aws_cloudfront_distribution" "site" {
   origin {
-    domain_name = aws_s3_bucket.site.bucket_domain_name
-    origin_id   = "site_bucket_origin"
-
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.site_distribution_oai.cloudfront_access_identity_path
-    }
+    domain_name              = aws_s3_bucket.site.bucket_domain_name
+    origin_id                = "site_bucket_origin"
+    origin_access_control_id = aws_cloudfront_origin_access_control.site_distribution_oac.id
   }
 
   enabled             = true
