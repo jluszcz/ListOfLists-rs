@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{Arg, Command};
+use clap::{Arg, ArgAction, Command};
 use list_of_lists::generator;
 use log::debug;
 
@@ -21,7 +21,6 @@ fn parse_args() -> Args {
                 .short('s')
                 .long("site-name")
                 .required(true)
-                .takes_value(true)
                 .env(list_of_lists::SITE_NAME_VAR)
                 .help("Site name, e.g. foolist."),
         )
@@ -30,7 +29,6 @@ fn parse_args() -> Args {
                 .short('u')
                 .long("site-url")
                 .required(true)
-                .takes_value(true)
                 .env(list_of_lists::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
         )
@@ -38,31 +36,40 @@ fn parse_args() -> Args {
             Arg::new("verbose")
                 .short('v')
                 .long("verbose")
+                .action(ArgAction::SetTrue)
                 .help("Verbose mode. Outputs DEBUG and higher log messages."),
         )
         .arg(
             Arg::new("local")
                 .short('l')
                 .long("local")
+                .action(ArgAction::SetTrue)
                 .help("If provided, use local files rather than S3."),
         )
         .arg(
             Arg::new("minify")
                 .short('m')
                 .long("minify")
+                .action(ArgAction::SetTrue)
                 .help("Minify generated site."),
         )
         .get_matches();
 
-    let site_name = matches.value_of("site-name").map(|l| l.into()).unwrap();
+    let site_name = matches
+        .get_one::<String>("site-name")
+        .map(|l| l.into())
+        .unwrap();
 
-    let site_url = matches.value_of("site-url").map(|l| l.into()).unwrap();
+    let site_url = matches
+        .get_one::<String>("site-url")
+        .map(|l| l.into())
+        .unwrap();
 
-    let verbose = matches.is_present("verbose");
+    let verbose = matches.get_flag("verbose");
 
-    let use_s3 = !matches.is_present("local");
+    let use_s3 = !matches.get_flag("local");
 
-    let minify = matches.is_present("minify");
+    let minify = matches.get_flag("minify");
 
     Args {
         site_name,
