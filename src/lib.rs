@@ -66,9 +66,9 @@ where
 
 pub mod s3util {
     use super::*;
-    use aws_sdk_s3::types::{ByteStream, SdkError};
+    use aws_sdk_s3::types::ByteStream;
     use bytes::Bytes;
-    use log::{debug, warn};
+    use log::debug;
 
     pub async fn get(
         s3_client: &aws_sdk_s3::Client,
@@ -126,14 +126,7 @@ pub mod s3util {
             .await;
         debug!("Checked {}:{} on S3", bucket_name, object_name);
 
-        Ok(match response {
-            Ok(_) => true,
-            Err(SdkError::ServiceError { err, .. }) => !err.is_not_found(),
-            _ => {
-                warn!("Failed to query S3: {:?}", response);
-                false
-            }
-        })
+        Ok(response.is_ok())
     }
 }
 
