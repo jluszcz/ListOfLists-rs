@@ -13,6 +13,10 @@ pub static SITE_URL_VAR: &str = "LOL_SITE_URL";
 pub struct ListOfLists {
     pub title: String,
     pub lists: Vec<List>,
+
+    #[serde(default, alias = "footerLinks")]
+    pub footer_links: Vec<FooterLink>,
+
     pub card_image_url: Option<String>,
 }
 
@@ -33,6 +37,13 @@ pub struct List {
 pub enum ListItem {
     Item(String),
     WithTooltip { item: String, tooltip: String },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Eq, PartialEq))]
+pub struct FooterLink {
+    pub url: String,
+    pub icon: String,
 }
 
 pub fn set_up_logger<T>(calling_module: T, verbose: bool) -> Result<()>
@@ -203,6 +214,7 @@ mod test {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
             card_image_url: None,
+            footer_links: vec![],
             lists: vec![
                 List::new("Letters", true, &vec!["A", "B", "C"]),
                 List::new("Numbers", false, &vec!["1", "2", "3"]),
