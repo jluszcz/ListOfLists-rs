@@ -39,7 +39,7 @@
         </div>
     </nav>
 
-    <div class="tab-content" style="padding-top: 1em;">
+    <div class="tab-content pt-2">
     {%- for list_item in lists if not list_item['hidden'] %}
         <div class="tab-pane container fluid {{ 'active' if loop.first else 'fade' }}" id="tab_{{ list_item['title'] | div_id_safe }}">
             <h3>{{ list_item['title'] }}</h3>
