@@ -40,11 +40,11 @@ fn parse_args() -> Args {
                 .help("Verbose mode. Outputs DEBUG and higher log messages."),
         )
         .arg(
-            Arg::new("local")
-                .short('l')
-                .long("local")
+            Arg::new("remote")
+                .short('r')
+                .long("remote")
                 .action(ArgAction::SetTrue)
-                .help("If provided, use local files rather than S3."),
+                .help("If provided, use S3 rather than local files."),
         )
         .arg(
             Arg::new("minify")
@@ -67,7 +67,7 @@ fn parse_args() -> Args {
 
     let verbose = matches.get_flag("verbose");
 
-    let use_s3 = !matches.get_flag("local");
+    let use_s3 = matches.get_flag("remote");
 
     let minify = matches.get_flag("minify");
 
