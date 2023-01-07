@@ -11,12 +11,6 @@ ListOfLists can generate a static website, hosted on AWS in an S3 bucket, from a
 ```
 {
     "title": "The List",
-    "footerLinks": [
-        {
-            "url": "https://github.com/jluszcz/ListOfLists-rs",
-            "icon": "github"
-        }
-    ]
     "lists": [
         {
             "title": "Letters",
@@ -46,6 +40,12 @@ ListOfLists can generate a static website, hosted on AWS in an S3 bucket, from a
                     "tooltip": "Not many people know this one"
                 }
             ]
+        }
+    ],
+    "footerLinks": [
+        {
+            "url": "https://github.com/jluszcz/ListOfLists-rs",
+            "icon": "github"
         }
     ]
 }
