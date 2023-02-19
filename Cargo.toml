@@ -10,7 +10,7 @@ anyhow = "1.0"
 aws-config = "0.54"
 aws-sdk-s3 = "0.24"
 aws-smithy-types-convert = { version = "0.54", features = ["convert-chrono"] }
-bytes = "1.3"
+bytes = "1.4"
 chrono = "0.4"
 chrono-tz = "0.8"
 clap = { version = "4.1", features = ["env"] }
@@ -24,7 +24,7 @@ regex = "1.7"
 reqwest = { version = "0.11", features = ["gzip", "json"] }
 serde = "1.0"
 serde_json = "1.0"
-tokio = { version = "1.24", features = ["full"] }
+tokio = { version = "1.25", features = ["full"] }
 
 [[bin]]
 name = "generator"
