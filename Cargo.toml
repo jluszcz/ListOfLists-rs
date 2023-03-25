@@ -9,7 +9,7 @@ default-run = "generator"
 anyhow = "1.0"
 aws-config = "0.54"
 aws-sdk-s3 = "0.24"
-aws-smithy-types-convert = { version = "0.54", features = ["convert-chrono"] }
+aws-smithy-types-convert = { version = "0.55", features = ["convert-chrono"] }
 bytes = "1.4"
 chrono = "0.4"
 chrono-tz = "0.8"
