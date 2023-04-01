@@ -77,7 +77,7 @@ where
 
 pub mod s3util {
     use super::*;
-    use aws_sdk_s3::types::ByteStream;
+    use aws_sdk_s3::primitives::ByteStream;
     use bytes::Bytes;
     use log::debug;
 
