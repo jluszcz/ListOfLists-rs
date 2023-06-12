@@ -57,7 +57,17 @@ impl Io {
             Io::LocalFile { path } => {
                 let path = path.join(target);
                 debug!("Reading {:?}", path);
-                Ok(fs::read_to_string(path).await?)
+                let res = fs::read_to_string(&path).await;
+                debug!(
+                    "{} {:?}",
+                    if res.is_ok() {
+                        "Read"
+                    } else {
+                        "Failed to read"
+                    },
+                    path
+                );
+                Ok(res?)
             }
         }
     }
@@ -73,7 +83,17 @@ impl Io {
             Io::LocalFile { path } => {
                 let path = path.join(target);
                 debug!("Writing to {:?}", path);
-                fs::write(path, content).await?
+                let res = fs::write(&path, content).await;
+                debug!(
+                    "{} {:?}",
+                    if res.is_ok() {
+                        "Wrote"
+                    } else {
+                        "Failed to write"
+                    },
+                    path
+                );
+                res?
             }
         }
 
