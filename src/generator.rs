@@ -1,10 +1,10 @@
 use crate::{s3util, ListOfLists};
 use anyhow::Result;
 use html5minify::Minify;
-use lazy_static::lazy_static;
 use log::debug;
 use minijinja::{Environment, Error, State};
 use regex::Regex;
+use std::sync::OnceLock;
 use std::{
     path::{Path, PathBuf},
     str,
@@ -140,11 +140,10 @@ fn inner_div_id_safe<S>(value: S) -> String
 where
     S: Into<String>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new("[^[_0-9A-Za-z]]").unwrap();
-    }
+    static RE: OnceLock<Regex> = OnceLock::new();
 
-    RE.replace_all(&value.into().replace(' ', "_"), "")
+    RE.get_or_init(|| Regex::new("[^[_0-9A-Za-z]]").unwrap())
+        .replace_all(&value.into().replace(' ', "_"), "")
         .into_owned()
 }
 

@@ -15,7 +15,6 @@ clap = { version = "4.3", features = ["env"] }
 fern = "0.6"
 html5minify = "0.3"
 lambda_runtime = "0.8"
-lazy_static = "1.4"
 log = "0.4"
 minijinja = "0.34"
 regex = "1.8"
