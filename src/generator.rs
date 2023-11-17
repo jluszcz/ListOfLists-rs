@@ -1,5 +1,6 @@
 use crate::{s3util, ListOfLists};
 use anyhow::Result;
+use aws_config::ConfigLoader;
 use html5minify::Minify;
 use log::debug;
 use minijinja::{Environment, Error, State};
@@ -30,7 +31,7 @@ enum Io {
 impl Io {
     async fn new(site_url: String, use_s3: bool) -> Self {
         if use_s3 {
-            let aws_config = aws_config::load_from_env().await;
+            let aws_config = ConfigLoader::default().load().await;
             Self::S3 {
                 s3_client: aws_sdk_s3::Client::new(&aws_config),
                 generator_bucket: format!("{site_url}-generator"),

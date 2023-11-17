@@ -7,8 +7,8 @@ default-run = "generator"
 
 [dependencies]
 anyhow = "1.0"
-aws-config = "0.57"
-aws-sdk-s3 = "0.35"
+aws-config = "0.100"
+aws-sdk-s3 = "0.37"
 bytes = "1.5"
 chrono = "0.4"
 clap = { version = "4.4", features = ["env"] }
