@@ -10,7 +10,10 @@
     {%- endif %}
 
     <style type="text/css">
+        @media (min-width: 992px) { .collapse, .collapsing { transition: none !important; } }
+        {%- if footer_links %}
         .hover { border-bottom: 1px dashed; }
+        {%- endif %}
     </style>
 
     <title>{{ title }}</title>
@@ -34,7 +37,9 @@
                 <ul class="navbar-nav nav">
                 {%- for list_item in lists if not list_item['hidden'] %}
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if loop.first else '' }}" data-bs-toggle="tab" href="#tab_{{ list_item['title'] | div_id_safe }}">{{ list_item['title'] }}</a>
+                        <span data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                            <a class="nav-link {{ 'active' if loop.first else '' }}" data-bs-toggle="tab" href="#tab_{{ list_item['title'] | div_id_safe }}">{{ list_item['title'] }}</a>
+                        </span>
                     </li>
                 {%- endfor %}
                 </ul>
