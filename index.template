@@ -68,7 +68,7 @@
     <footer class="footer bg-dark sticky-bottom mt-auto">
         <div class="container fluid">
             {%- for link in footer_links %}
-            <a class="fs-4 me-3 link-light" href="{{ link.url }}" target="_blank"><i class="bi bi-{{ link.icon }}"></i></a>
+            <a class="fs-4 me-3 link-light" href="{%- autoescape false -%}{{ link.url }}{%- endautoescape -%}" target="_blank"><i class="bi bi-{{ link.icon }}"></i></a>
             {%- endfor %}
         </div>
     </footer>
