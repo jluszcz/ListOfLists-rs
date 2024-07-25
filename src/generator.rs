@@ -5,7 +5,7 @@ use html5minify::Minify;
 use log::debug;
 use minijinja::{Environment, Error, State};
 use regex::Regex;
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 use std::{
     path::{Path, PathBuf},
     str,
@@ -141,10 +141,9 @@ fn inner_div_id_safe<S>(value: S) -> String
 where
     S: Into<String>,
 {
-    static RE: OnceLock<Regex> = OnceLock::new();
+    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new("[^[_0-9A-Za-z]]").unwrap());
 
-    RE.get_or_init(|| Regex::new("[^[_0-9A-Za-z]]").unwrap())
-        .replace_all(&value.into().replace(' ', "_"), "")
+    RE.replace_all(&value.into().replace(' ', "_"), "")
         .into_owned()
 }
 
