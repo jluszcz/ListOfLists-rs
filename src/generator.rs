@@ -126,7 +126,7 @@ async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
     let content = io.read(&format!("{site_name}.json")).await?;
     let list_of_lists: ListOfLists = serde_json::from_str(content.as_str())?;
 
-    Ok(list_of_lists)
+    list_of_lists.validate()
 }
 
 async fn card_image_exists(io: &Io) -> Result<bool> {

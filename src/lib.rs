@@ -1,7 +1,8 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::collections::HashSet;
 
 pub mod generator;
 
@@ -20,6 +21,15 @@ pub struct ListOfLists {
     pub card_image_url: Option<String>,
 }
 
+impl ListOfLists {
+    pub fn validate(self) -> Result<Self> {
+        for l in &self.lists {
+            l.validate()?;
+        }
+        Ok(self)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct List {
@@ -28,12 +38,24 @@ pub struct List {
     #[serde(default)]
     pub hidden: bool,
 
+    #[serde(default)]
+    duplicates: bool,
+
     pub list: Vec<ListItem>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl List {
+    fn validate(&self) -> Result<()> {
+        if !self.duplicates && self.list.iter().collect::<HashSet<_>>().len() != self.list.len() {
+            Err(anyhow!("Illegal duplicates found in {:?}", self.list))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(untagged)]
-#[cfg_attr(test, derive(Eq, PartialEq))]
 pub enum ListItem {
     Item(String),
     WithTooltip { item: String, tooltip: String },
@@ -143,7 +165,6 @@ pub mod s3util {
 
 #[cfg(test)]
 mod test {
-
     use super::*;
 
     const EXAMPLE_LIST: &str = r#"
@@ -182,15 +203,16 @@ mod test {
     "#;
 
     impl List {
-        fn new(title: &str, hidden: bool, list: &[&str]) -> Self {
+        fn new(title: &str, hidden: bool, duplicates: bool, list: &[&str]) -> Self {
             let list_items: Vec<ListItem> = list.iter().cloned().map(ListItem::new).collect();
-            Self::from_items(title, hidden, list_items)
+            Self::from_items(title, hidden, duplicates, list_items)
         }
 
-        fn from_items(title: &str, hidden: bool, list: Vec<ListItem>) -> Self {
+        fn from_items(title: &str, hidden: bool, duplicates: bool, list: Vec<ListItem>) -> Self {
             Self {
                 title: title.to_string(),
                 hidden,
+                duplicates,
                 list,
             }
         }
@@ -216,10 +238,11 @@ mod test {
             card_image_url: None,
             footer_links: vec![],
             lists: vec![
-                List::new("Letters", true, &vec!["A", "B", "C"]),
-                List::new("Numbers", false, &vec!["1", "2", "3"]),
+                List::new("Letters", true, false, &vec!["A", "B", "C"]),
+                List::new("Numbers", false, false, &vec!["1", "2", "3"]),
                 List::from_items(
                     "Tooltip",
+                    false,
                     false,
                     vec![ListItem::new("foo"), ListItem::with_tooltip("bar", "baz")],
                 ),
@@ -234,5 +257,19 @@ mod test {
         assert_eq!(list_of_lists, from_example);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_list_validation_duplicates_allowed() {
+        let l = List::new("Letters", false, true, &vec!["A", "A"]);
+
+        assert!(l.validate().is_ok());
+    }
+
+    #[test]
+    fn test_list_validation_duplicates_disallowed() {
+        let l = List::new("Letters", false, false, &vec!["A", "A"]);
+
+        assert!(l.validate().is_err());
     }
 }
