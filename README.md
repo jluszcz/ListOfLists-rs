@@ -1,10 +1,10 @@
-#  ListOfLists
+# ListOfLists
 
 ListOfLists can generate a static website, hosted on AWS in an S3 bucket, from a `json` file stored in S3.
 
 ## Status
 
-![Status Badge](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-test.yml/badge.svg)
+[![Status Badge](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-test.yml)
 
 ## List JSON
 
@@ -75,5 +75,6 @@ export TF_VAR_site_url=${LOL_SITE_URL}
 ### Update List
 
 1. Upload a `${LOL_SITE}.json` to `s3://${LOL_SITE_URL}-generator/${LOL_SITE}.json`
-  - See [moviel.ist](https://github.com/jluszcz/MovieList) or [burgerl.ist](https://github.com/jluszcz/BurgerList) for
-    examples of how to automate this with [GitHub actions](https://github.com/features/actions).
+
+- See [moviel.ist](https://github.com/jluszcz/MovieList) or [burgerl.ist](https://github.com/jluszcz/BurgerList) for
+  examples of how to automate this with [GitHub actions](https://github.com/features/actions).
