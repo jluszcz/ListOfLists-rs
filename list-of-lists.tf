@@ -48,11 +48,11 @@ resource "aws_s3_bucket_website_configuration" "site" {
 
 data "aws_iam_policy_document" "site" {
   statement {
-    actions   = ["s3:GetObject"]
+    actions = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.site.arn}/*"]
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = ["cloudfront.amazonaws.com"]
     }
 
@@ -75,7 +75,7 @@ resource "aws_s3_object" "favicon" {
   bucket = aws_s3_bucket.site.id
   key    = "images/favicon.ico"
   source = "buckets/${var.site_url}/images/favicon.ico"
-  etag   = filemd5("buckets/${var.site_url}/images/favicon.ico")
+  etag = filemd5("buckets/${var.site_url}/images/favicon.ico")
 }
 
 resource "aws_s3_object" "card_image" {
@@ -83,14 +83,14 @@ resource "aws_s3_object" "card_image" {
   bucket = aws_s3_bucket.site.id
   key    = "images/card.png"
   source = "buckets/${var.site_url}/images/card.png"
-  etag   = filemd5("buckets/${var.site_url}/images/card.png")
+  etag = filemd5("buckets/${var.site_url}/images/card.png")
 }
 
 resource "aws_acm_certificate" "cert" {
-  provider                  = aws.us_east_1
-  domain_name               = var.site_url
+  provider          = aws.us_east_1
+  domain_name       = var.site_url
   subject_alternative_names = ["www.${var.site_url}"]
-  validation_method         = "DNS"
+  validation_method = "DNS"
 }
 
 resource "aws_acm_certificate_validation" "cert" {
@@ -112,7 +112,7 @@ resource "aws_route53_record" "cert_validation" {
   name            = each.value.name
   type            = each.value.type
   zone_id         = aws_route53_zone.zone.id
-  records         = [each.value.record]
+  records = [each.value.record]
   ttl             = 60
 }
 
@@ -139,8 +139,8 @@ resource "aws_cloudfront_distribution" "site" {
   aliases = ["www.${var.site_url}", var.site_url]
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
+    allowed_methods = ["GET", "HEAD"]
+    cached_methods = ["GET", "HEAD"]
     target_origin_id = "site_bucket_origin"
 
     forwarded_values {
@@ -186,11 +186,34 @@ resource "aws_s3_bucket_public_access_block" "generator" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_versioning" "generator" {
+  bucket = aws_s3_bucket.generator.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "generator" {
+  depends_on = [aws_s3_bucket_versioning.generator]
+
+  bucket = aws_s3_bucket.generator.id
+
+  rule {
+    id = "expire-noncurrent"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_object" "index_template" {
   bucket = aws_s3_bucket.generator.id
   key    = "index.template"
   source = "index.template"
-  etag   = filemd5("index.template")
+  etag = filemd5("index.template")
 }
 
 resource "aws_route53_zone" "zone" {
@@ -230,7 +253,7 @@ resource "aws_cloudwatch_log_group" "generator" {
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = ["lambda.amazonaws.com"]
     }
     actions = ["sts:AssumeRole"]
@@ -244,7 +267,7 @@ resource "aws_iam_role" "lambda_generator" {
 
 data "aws_iam_policy_document" "cw_logs" {
   statement {
-    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:Describe*"]
+    actions = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:Describe*"]
     resources = ["arn:aws:logs:${var.aws_region}:${var.aws_acct_id}:*"]
   }
 }
@@ -261,17 +284,17 @@ resource "aws_iam_role_policy_attachment" "generator_cw_logs" {
 
 data "aws_iam_policy_document" "generator_s3" {
   statement {
-    actions   = ["s3:PutObject"]
+    actions = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.site.arn}/index.html"]
   }
 
   statement {
-    actions   = ["s3:GetObject", "s3:HeadObject"]
+    actions = ["s3:GetObject", "s3:HeadObject"]
     resources = ["${aws_s3_bucket.site.arn}/images/card.png"]
   }
 
   statement {
-    actions   = ["s3:GetObject"]
+    actions = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.generator.arn}/*"]
   }
 }
@@ -291,7 +314,7 @@ resource "aws_s3_bucket_notification" "generator_notification" {
 
   lambda_function {
     lambda_function_arn = aws_lambda_function.lambda_generator.arn
-    events              = ["s3:ObjectCreated:Put"]
+    events = ["s3:ObjectCreated:Put"]
   }
 }
 
@@ -330,7 +353,7 @@ resource "aws_iam_user" "github" {
 
 data "aws_iam_policy_document" "github" {
   statement {
-    actions   = ["s3:PutObject"]
+    actions = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.generator.arn}/${var.site_name}.json"]
   }
 }
