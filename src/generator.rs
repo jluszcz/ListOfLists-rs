@@ -1,4 +1,4 @@
-use crate::{s3util, ListOfLists};
+use crate::{ListOfLists, s3util};
 use anyhow::Result;
 use aws_config::ConfigLoader;
 use html5minify::Minify;

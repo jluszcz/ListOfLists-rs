@@ -1,6 +1,6 @@
-use lambda_runtime::{service_fn, LambdaEvent};
+use lambda_runtime::{LambdaEvent, service_fn};
 use list_of_lists::generator;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::env;
 use std::error::Error;
 
