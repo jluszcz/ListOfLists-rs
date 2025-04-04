@@ -2,7 +2,7 @@ use crate::{ListOfLists, s3util};
 use anyhow::Result;
 use aws_config::ConfigLoader;
 use html5minify::Minify;
-use log::debug;
+use log::{debug, trace};
 use minijinja::{Environment, Error, State};
 use regex::Regex;
 use std::sync::LazyLock;
@@ -125,6 +125,7 @@ async fn read_template(io: &Io) -> Result<String> {
 async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
     let content = io.read(&format!("{site_name}.json")).await?;
     let list_of_lists: ListOfLists = serde_json::from_str(content.as_str())?;
+    trace!("{list_of_lists:?}");
 
     list_of_lists.validate()
 }

@@ -47,9 +47,30 @@ ListOfLists can generate a static website, hosted on AWS in an S3 bucket, from a
             "url": "https://github.com/jluszcz/ListOfLists-rs",
             "icon": "github"
         }
-    ]
+    ],
+    "footer": {
+        "imports": [
+            "<script src=\"https://kit.fontawesome.com/deadbeef.js\" crossorigin=\"anonymous\"></script>"
+        ],
+        "links": [
+            {
+                "url": "https://github.com/jluszcz/ListOfLists-rs",
+                "title": "GitHub",
+                "icon": "fa-brands fa-github"
+            }
+        ]
+    }
 }
 ```
+
+### Footers
+
+The `footerLinks` list in the example above will use `icon` as a [Bootstrap Icon](https://icons.getbootstrap.com). The
+`footer` object in the example above is more generic - you can use `imports` and `links` to use either
+[Bootstrap Icon](https://icons.getbootstrap.com) or [Font Awesome](https://fontawesome.com), and `icon` will be passed
+as the CSS class of the icon.
+
+When both are present, the newer `footer` object will be used.
 
 ## Update Site
 

@@ -16,7 +16,9 @@ pub struct ListOfLists {
     pub lists: Vec<List>,
 
     #[serde(default, alias = "footerLinks")]
-    pub footer_links: Vec<FooterLink>,
+    pub footer_links: Vec<FooterItem>,
+
+    pub footer: Option<Footer>,
 
     pub card_image_url: Option<String>,
 }
@@ -63,9 +65,22 @@ pub enum ListItem {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Eq, PartialEq))]
-pub struct FooterLink {
+pub struct Footer {
+    #[serde(default)]
+    pub imports: Vec<String>,
+
+    #[serde(default)]
+    pub links: Vec<FooterItem>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Eq, PartialEq))]
+pub struct FooterItem {
     pub url: String,
     pub icon: String,
+
+    #[serde(default)]
+    pub title: Option<String>,
 }
 
 pub fn set_up_logger<T>(calling_module: T, verbose: bool) -> Result<()>
@@ -237,6 +252,7 @@ mod test {
             title: "The List".to_string(),
             card_image_url: None,
             footer_links: vec![],
+            footer: None,
             lists: vec![
                 List::new("Letters", true, false, &vec!["A", "B", "C"]),
                 List::new("Numbers", false, false, &vec!["1", "2", "3"]),
@@ -271,5 +287,52 @@ mod test {
         let l = List::new("Letters", false, false, &vec!["A", "A"]);
 
         assert!(l.validate().is_err());
+    }
+
+    #[test]
+    fn test_list_of_lists_footer() -> Result<()> {
+        let list_of_lists = ListOfLists {
+            title: "The List".to_string(),
+            card_image_url: None,
+            footer_links: vec![],
+            footer: Some(Footer {
+                imports: vec!["https://import.js".to_string()],
+                links: vec![FooterItem {
+                    url: "https://github.com".to_string(),
+                    icon: "github".to_string(),
+                    title: Some("GitHub".to_string()),
+                }],
+            }),
+            lists: vec![List::new("Letters", true, false, &vec!["A", "B", "C"])],
+        };
+
+        let serialized = serde_json::to_string(&list_of_lists)?;
+        let deserialized: ListOfLists = serde_json::from_str(&serialized)?;
+
+        assert_eq!(list_of_lists, deserialized);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_list_of_lists_legacy_footer() -> Result<()> {
+        let list_of_lists = ListOfLists {
+            title: "The List".to_string(),
+            card_image_url: None,
+            footer_links: vec![FooterItem {
+                url: "https://github.com".to_string(),
+                icon: "github".to_string(),
+                title: None,
+            }],
+            footer: None,
+            lists: vec![List::new("Letters", true, false, &vec!["A", "B", "C"])],
+        };
+
+        let serialized = serde_json::to_string(&list_of_lists)?;
+        let deserialized: ListOfLists = serde_json::from_str(&serialized)?;
+
+        assert_eq!(list_of_lists, deserialized);
+
+        Ok(())
     }
 }
