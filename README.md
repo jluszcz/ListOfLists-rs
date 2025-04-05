@@ -67,7 +67,7 @@ ListOfLists can generate a static website, hosted on AWS in an S3 bucket, from a
 
 The `footerLinks` list in the example above will use `icon` as a [Bootstrap Icon](https://icons.getbootstrap.com). The
 `footer` object in the example above is more generic - you can use `imports` and `links` to use either
-[Bootstrap Icon](https://icons.getbootstrap.com) or [Font Awesome](https://fontawesome.com), and `icon` will be passed
+[Bootstrap Icons](https://icons.getbootstrap.com) or [Font Awesome](https://fontawesome.com), and `icon` will be passed
 as the CSS class of the icon.
 
 When both are present, the newer `footer` object will be used.
