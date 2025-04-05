@@ -71,11 +71,11 @@
         <div class="container fluid">
             {%- if footer %}
             {%- for link in footer['links'] %}
-            <a class="fs-4 me-3 link-light" href="{{ link.url | safe }}" title="{{ link.title }}" target="_blank"><i class="{{ link.icon }}"></i></a>
+            <a class="fs-4 me-3 link-light" href="{{ link.url | safe }}" {%- if link.title %} title="{{ link.title }}"{%- endif %} target="_blank"><i class="{{ link.icon }}"></i></a>
             {%- endfor %}
             {%- elif footer_links %}
             {%- for link in footer_links %}
-            <a class="fs-4 me-3 link-light" href="{{ link.url | safe }}" target="_blank"><i class="bi bi-{{ link.icon }}"></i></a>
+            <a class="fs-4 me-3 link-light" href="{{ link.url | safe }}" {%- if link.title %} title="{{ link.title }}"{%- endif %} target="_blank"><i class="bi bi-{{ link.icon }}"></i></a>
             {%- endfor %}
             {%- endif %}
         </div>
