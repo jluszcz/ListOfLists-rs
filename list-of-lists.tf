@@ -332,7 +332,7 @@ resource "aws_lambda_function" "lambda_generator" {
   s3_key        = "generator.zip"
   role          = aws_iam_role.lambda_generator.arn
   architectures = ["arm64"]
-  runtime       = "provided.al2"
+  runtime       = "provided.al2023"
   handler       = "ignored"
   publish       = "false"
   description   = "Generate ${var.site_url}"
