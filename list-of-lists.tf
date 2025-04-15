@@ -351,6 +351,14 @@ resource "aws_lambda_function" "lambda_generator" {
   }
 }
 
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
 data "aws_iam_policy_document" "github" {
   statement {
     actions = ["s3:PutObject"]
@@ -361,14 +369,6 @@ data "aws_iam_policy_document" "github" {
 resource "aws_iam_policy" "github" {
   name   = "${var.site_name}.github"
   policy = data.aws_iam_policy_document.github.json
-}
-
-resource "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
-
-  client_id_list = ["sts.amazonaws.com"]
-
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
 resource "aws_iam_role" "github" {
