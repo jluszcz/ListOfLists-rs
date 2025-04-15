@@ -11,6 +11,10 @@ variable "site_url" {}
 
 variable "code_bucket" {}
 
+variable "github_org" {}
+
+variable "github_repo" {}
+
 variable "aws_region" {
   type    = string
   default = "us-east-2"
@@ -347,10 +351,6 @@ resource "aws_lambda_function" "lambda_generator" {
   }
 }
 
-resource "aws_iam_user" "github" {
-  name = "github.${var.site_name}"
-}
-
 data "aws_iam_policy_document" "github" {
   statement {
     actions = ["s3:PutObject"]
@@ -363,7 +363,40 @@ resource "aws_iam_policy" "github" {
   policy = data.aws_iam_policy_document.github.json
 }
 
-resource "aws_iam_user_policy_attachment" "github" {
-  user       = aws_iam_user.github.name
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+resource "aws_iam_role" "github" {
+  name = "github.${var.site_name}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github.arn
+        },
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" : "repo:${var.github_org}/${var.github_repo}:*"
+          },
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github" {
+  role       = aws_iam_role.github.name
   policy_arn = aws_iam_policy.github.arn
 }
