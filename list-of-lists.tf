@@ -249,8 +249,8 @@ resource "aws_route53_record" "record_www" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "generator" {
-  name              = "/aws/lambda/${var.site_name}-generator"
+resource "aws_cloudwatch_log_group" "lambda" {
+  name              = "/aws/lambda/${var.site_name}"
   retention_in_days = "7"
 }
 
@@ -264,8 +264,8 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
-resource "aws_iam_role" "lambda_generator" {
-  name               = "lambda.${var.site_name}.generator"
+resource "aws_iam_role" "lambda" {
+  name               = "${var.site_name}.lambda"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -281,12 +281,12 @@ resource "aws_iam_policy" "cw_logs" {
   policy = data.aws_iam_policy_document.cw_logs.json
 }
 
-resource "aws_iam_role_policy_attachment" "generator_cw_logs" {
-  role       = aws_iam_role.lambda_generator.name
+resource "aws_iam_role_policy_attachment" "cw_logs" {
+  role       = aws_iam_role.lambda.name
   policy_arn = aws_iam_policy.cw_logs.arn
 }
 
-data "aws_iam_policy_document" "generator_s3" {
+data "aws_iam_policy_document" "s3" {
   statement {
     actions = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.site.arn}/index.html"]
@@ -303,38 +303,38 @@ data "aws_iam_policy_document" "generator_s3" {
   }
 }
 
-resource "aws_iam_policy" "generator_s3" {
-  name   = "${var.site_name}.generator_s3"
-  policy = data.aws_iam_policy_document.generator_s3.json
+resource "aws_iam_policy" "s3" {
+  name   = "${var.site_name}.s3"
+  policy = data.aws_iam_policy_document.s3.json
 }
 
-resource "aws_iam_role_policy_attachment" "generator_s3" {
-  role       = aws_iam_role.lambda_generator.name
-  policy_arn = aws_iam_policy.generator_s3.arn
+resource "aws_iam_role_policy_attachment" "s3" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = aws_iam_policy.s3.arn
 }
 
-resource "aws_s3_bucket_notification" "generator_notification" {
+resource "aws_s3_bucket_notification" "notification" {
   bucket = aws_s3_bucket.generator.id
 
   lambda_function {
-    lambda_function_arn = aws_lambda_function.lambda_generator.arn
+    lambda_function_arn = aws_lambda_function.lambda.arn
     events = ["s3:ObjectCreated:Put"]
   }
 }
 
-resource "aws_lambda_permission" "generator_allow_bucket" {
+resource "aws_lambda_permission" "allow_bucket" {
   statement_id  = "${var.site_name}-AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_generator.arn
+  function_name = aws_lambda_function.lambda.arn
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.generator.arn
 }
 
-resource "aws_lambda_function" "lambda_generator" {
-  function_name = "${var.site_name}-generator"
+resource "aws_lambda_function" "lambda" {
+  function_name = "${var.site_name}"
   s3_bucket     = var.code_bucket
-  s3_key        = "generator.zip"
-  role          = aws_iam_role.lambda_generator.arn
+  s3_key        = "list-of-lists.zip"
+  role          = aws_iam_role.lambda.arn
   architectures = ["arm64"]
   runtime       = "provided.al2023"
   handler       = "ignored"
@@ -359,20 +359,20 @@ resource "aws_iam_openid_connect_provider" "github" {
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
-data "aws_iam_policy_document" "github" {
+data "aws_iam_policy_document" "github_update" {
   statement {
     actions = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.generator.arn}/${var.site_name}.json"]
   }
 }
 
-resource "aws_iam_policy" "github" {
-  name   = "${var.site_name}.github"
-  policy = data.aws_iam_policy_document.github.json
+resource "aws_iam_policy" "github_update" {
+  name   = "${var.site_name}.github-update"
+  policy = data.aws_iam_policy_document.github_update.json
 }
 
-resource "aws_iam_role" "github" {
-  name = "github.${var.site_name}"
+resource "aws_iam_role" "github_update" {
+  name = "${var.site_name}.github-update"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -396,7 +396,7 @@ resource "aws_iam_role" "github" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "github" {
-  role       = aws_iam_role.github.name
-  policy_arn = aws_iam_policy.github.arn
+resource "aws_iam_role_policy_attachment" "github_update" {
+  role       = aws_iam_role.github_update.name
+  policy_arn = aws_iam_policy.github_update.arn
 }
