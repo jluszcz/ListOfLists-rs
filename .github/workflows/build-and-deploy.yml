@@ -77,4 +77,4 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
           FUNCTIONS: ${{ env.FUNCTIONS }}
-        run: aws s3 cp --metadata 'function.names="${FUNCTIONS}"' list-of-lists.zip s3://${AWS_BUCKET}/
+        run: aws s3 cp --metadata function.names="${FUNCTIONS}" list-of-lists.zip s3://${AWS_BUCKET}/
