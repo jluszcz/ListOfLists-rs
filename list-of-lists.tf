@@ -322,12 +322,12 @@ resource "aws_s3_bucket_notification" "notification" {
 
   lambda_function {
     lambda_function_arn = aws_lambda_function.lambda.arn
-    events = ["s3:ObjectCreated:Put"]
+    events = ["s3:ObjectCreated:*"]
   }
 }
 
 resource "aws_lambda_permission" "allow_bucket" {
-  statement_id  = "${var.site_name}-AllowExecutionFromS3Bucket"
+  statement_id  = "${var.site_name}-allow-exec-from-s3"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
   principal     = "s3.amazonaws.com"
