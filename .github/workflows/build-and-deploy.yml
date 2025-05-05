@@ -10,7 +10,7 @@ on:
       - 'src/**/*.rs'
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     permissions:
