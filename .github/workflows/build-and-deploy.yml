@@ -1,0 +1,80 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+      - 'Cargo**'
+      - 'src/**/*.rs'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update Rust
+        run: |
+          rustup update
+          rustup component add clippy
+
+      - name: Dump Toolchain Info
+        run: |
+          cargo --version --verbose
+          rustc --version
+          cargo clippy --version
+
+      - name: Build
+        run: cargo build
+
+      - name: Test
+        run: cargo test
+
+      - name: Lint
+        run: cargo clippy -- -D warnings
+
+  deploy:
+    needs: build-and-test
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update and Configure Rust
+        run: |
+          sudo apt-get install -y musl-tools
+          rustup update
+          rustup target add x86_64-unknown-linux-musl
+
+      - name: Dump Toolchain Info
+        run: |
+          cargo --version --verbose
+          rustc --version
+
+      - name: Build
+        run: |
+          cargo build --release --target x86_64-unknown-linux-musl --bin lambda
+          cp target/x86_64-unknown-linux-musl/release/lambda bootstrap
+          zip -j list-of-lists.zip bootstrap
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/list-of-lists.github-deploy
+          role-session-name: github-deploy
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Deploy Lambda
+        env:
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+          FUNCTIONS: ${{ env.FUNCTIONS }}
+        run: aws s3 cp --metadata 'function.names="${FUNCTIONS}"' list-of-lists.zip s3://${AWS_BUCKET}/

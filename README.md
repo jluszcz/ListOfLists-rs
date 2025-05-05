@@ -4,7 +4,7 @@ ListOfLists can generate a static website, hosted on AWS in an S3 bucket, from a
 
 ## Status
 
-[![Status Badge](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-test.yml)
+[![Status Badge](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml)
 
 ## List JSON
 

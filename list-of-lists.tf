@@ -29,6 +29,10 @@ provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_s3_bucket" "code_bucket" {
+  bucket = var.code_bucket
+}
+
 resource "aws_s3_bucket" "site" {
   bucket = var.site_url
 }
@@ -399,4 +403,46 @@ resource "aws_iam_role" "github_update" {
 resource "aws_iam_role_policy_attachment" "github_update" {
   role       = aws_iam_role.github_update.name
   policy_arn = aws_iam_policy.github_update.arn
+}
+
+data "aws_iam_policy_document" "github_deploy" {
+  statement {
+    actions = ["s3:PutObject"]
+    resources = ["${data.aws_s3_bucket.code_bucket.arn}/list-of-lists.zip"]
+  }
+}
+
+resource "aws_iam_policy" "github_deploy" {
+  name   = "${var.site_name}.github-deploy"
+  policy = data.aws_iam_policy_document.github_deploy.json
+}
+
+resource "aws_iam_role" "github_deploy" {
+  name = "${var.site_name}.github-deploy"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github.arn
+        },
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" : "repo:jluszcz/ListOfLists-rs:*"
+          },
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_deploy" {
+  role       = aws_iam_role.github_deploy.name
+  policy_arn = aws_iam_policy.github_deploy.arn
 }
