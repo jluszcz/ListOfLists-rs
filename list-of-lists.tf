@@ -413,12 +413,12 @@ data "aws_iam_policy_document" "github_deploy" {
 }
 
 resource "aws_iam_policy" "github_deploy" {
-  name   = "${var.site_name}.github-deploy"
+  name   = "list-of-lists.github-deploy"
   policy = data.aws_iam_policy_document.github_deploy.json
 }
 
 resource "aws_iam_role" "github_deploy" {
-  name = "${var.site_name}.github-deploy"
+  name = "list-of-lists.github-deploy"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
