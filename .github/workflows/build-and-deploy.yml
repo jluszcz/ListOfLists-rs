@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
     paths:
       - '.github/workflows/**'
       - 'Cargo**'
@@ -11,11 +12,15 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     permissions:
       id-token: write
       contents: read
+
+    env:
+      BUILD_TARGET: aarch64-unknown-linux-musl
+      PROJECT: list-of-lists
 
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +28,7 @@ jobs:
       - name: Update and Configure Rust
         run: |
           sudo apt-get install -y musl-tools
-          rustup target add x86_64-unknown-linux-musl
+          rustup target add ${{ env.BUILD_TARGET }}
           rustup update
           rustup component add clippy
 
@@ -34,23 +39,23 @@ jobs:
           cargo clippy --version
 
       - name: Build
-        run: cargo build --release --target x86_64-unknown-linux-musl
+        run: cargo build --release --target ${{ env.BUILD_TARGET }}
 
       - name: Test
-        run: cargo test --target x86_64-unknown-linux-musl
+        run: cargo test --target ${{ env.BUILD_TARGET }}
 
       - name: Lint
-        run: cargo clippy --target x86_64-unknown-linux-musl -- -D warnings
+        run: cargo clippy --target ${{ env.BUILD_TARGET }} -- -D warnings
 
       - name: Package
         run: |
-          cp target/x86_64-unknown-linux-musl/release/lambda bootstrap
-          zip -j list-of-lists.zip bootstrap
+          cp target/${{ env.BUILD_TARGET }}/release/lambda bootstrap
+          zip -j ${{ env.PROJECT }}.zip bootstrap
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/list-of-lists.github-deploy
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT }}.github-deploy
           role-session-name: github-deploy
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
@@ -59,4 +64,4 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
           FUNCTIONS: ${{ vars.FUNCTIONS }}
-        run: aws s3 cp --metadata 'function.names="'${FUNCTIONS}'"' list-of-lists.zip s3://${AWS_BUCKET}/
+        run: aws s3 cp --metadata 'function.names="'${FUNCTIONS}'"' ${{ env.PROJECT }}.zip s3://${AWS_BUCKET}/

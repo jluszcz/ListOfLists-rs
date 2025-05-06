@@ -339,7 +339,7 @@ resource "aws_lambda_function" "lambda" {
   s3_bucket     = var.code_bucket
   s3_key        = "list-of-lists.zip"
   role          = aws_iam_role.lambda.arn
-  architectures = ["x86_64"]
+  architectures = ["arm64"]
   runtime       = "provided.al2023"
   handler       = "ignored"
   publish       = "false"
