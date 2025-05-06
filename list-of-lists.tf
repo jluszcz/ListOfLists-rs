@@ -336,7 +336,7 @@ resource "aws_lambda_permission" "allow_bucket" {
 
 resource "aws_lambda_function" "lambda" {
   function_name = "${var.site_name}"
-  s3_bucket     = var.code_bucket
+  s3_bucket     = "${data.aws_s3_bucket.code_bucket.bucket}"
   s3_key        = "list-of-lists.zip"
   role          = aws_iam_role.lambda.arn
   architectures = ["arm64"]
