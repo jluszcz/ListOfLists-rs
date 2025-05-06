@@ -39,7 +39,7 @@ jobs:
           cargo clippy --version
 
       - name: Build
-        run: cargo build --release --target ${{ env.BUILD_TARGET }}
+        run: cargo build --target ${{ env.BUILD_TARGET }}
 
       - name: Test
         run: cargo test --target ${{ env.BUILD_TARGET }}
@@ -49,6 +49,7 @@ jobs:
 
       - name: Package
         run: |
+          cargo build --release --target ${{ env.BUILD_TARGET }}
           cp target/${{ env.BUILD_TARGET }}/release/lambda bootstrap
           zip -j ${{ env.PROJECT }}.zip bootstrap
 
