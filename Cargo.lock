@@ -1888,6 +1888,7 @@ dependencies = [
  "log",
  "minijinja",
  "regex",
+ "rustc_version",
  "serde",
  "serde_json",
  "tokio",

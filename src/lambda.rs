@@ -8,6 +8,8 @@ use std::error::Error;
 
 type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 
+const RUSTC_VERSION: &str = env!("RUSTC_VERSION");
+
 const USE_S3: bool = true;
 const MINIFY: bool = true;
 
@@ -20,6 +22,8 @@ async fn main() -> Result<(), LambdaError> {
 
 async fn function(event: LambdaEvent<Value>) -> Result<Value, LambdaError> {
     list_of_lists::set_up_logger(module_path!(), false)?;
+
+    info!("rustc version: {RUSTC_VERSION}");
 
     let site_name = env::var(list_of_lists::SITE_NAME_VAR)?;
     let site_url = env::var(list_of_lists::SITE_URL_VAR)?;
