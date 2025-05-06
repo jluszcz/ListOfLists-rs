@@ -217,13 +217,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "generator" {
   }
 }
 
-resource "aws_s3_object" "index_template" {
-  bucket = aws_s3_bucket.generator.id
-  key    = "index.template"
-  source = "index.template"
-  etag = filemd5("index.template")
-}
-
 resource "aws_route53_zone" "zone" {
   name    = var.site_url
   comment = "${var.site_name} Hosted Zone"
@@ -362,7 +355,10 @@ data "aws_iam_openid_connect_provider" "github" {
 data "aws_iam_policy_document" "github_update" {
   statement {
     actions = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.generator.arn}/${var.site_name}.json"]
+    resources = [
+      "${aws_s3_bucket.generator.arn}/index.template",
+      "${aws_s3_bucket.generator.arn}/${var.site_name}.json"
+    ]
   }
 }
 
