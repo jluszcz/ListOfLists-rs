@@ -6,6 +6,7 @@ on:
       - main
 
     paths:
+      - '.github/workflows/update-index-movielist.yaml'
       - 'index.template'
 
 jobs:
