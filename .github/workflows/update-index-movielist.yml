@@ -1,4 +1,4 @@
-name: Update Burger List Template
+name: Update Movie List Template
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
     paths:
-      - '.github/workflows/update-index-burgerlist.yaml'
+      - '.github/workflows/update-index-movielist.yml'
       - 'index.template'
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
       contents: read
 
     env:
-      SITE: burgerlist
+      SITE: movielist
 
     steps:
       - uses: actions/checkout@v4
@@ -33,5 +33,5 @@ jobs:
       - name: Upload to S3
         env:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          BUCKET: ${{ secrets.BURGERLIST_BUCKET }}
+          BUCKET: ${{ secrets.MOVIELIST_BUCKET }}
         run: aws s3 cp index.template s3://${BUCKET}/
