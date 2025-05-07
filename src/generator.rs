@@ -57,16 +57,15 @@ impl Io {
 
             Io::LocalFile { path } => {
                 let path = path.join(target);
-                debug!("Reading {:?}", path);
+                debug!("Reading {path:?}");
                 let res = fs::read_to_string(&path).await;
                 debug!(
-                    "{} {:?}",
+                    "{} {path:?}",
                     if res.is_ok() {
                         "Read"
                     } else {
                         "Failed to read"
-                    },
-                    path
+                    }
                 );
                 Ok(res?)
             }
@@ -86,13 +85,12 @@ impl Io {
                 debug!("Writing to {:?}", path);
                 let res = fs::write(&path, content).await;
                 debug!(
-                    "{} {:?}",
+                    "{} {path:?}",
                     if res.is_ok() {
                         "Wrote"
                     } else {
                         "Failed to write"
-                    },
-                    path
+                    }
                 );
                 res?
             }
@@ -111,7 +109,7 @@ impl Io {
 
             Io::LocalFile { path } => {
                 let path = path.join(target);
-                debug!("Checking if {:?} exists", path);
+                debug!("Checking if {path:?} exists");
                 Ok(fs::metadata(path).await.is_ok())
             }
         }
@@ -172,22 +170,18 @@ pub async fn update_site(
 
     let template = env.get_template(SITE_INDEX)?;
 
-    debug!("Rendering {}", SITE_INDEX);
+    debug!("Rendering {SITE_INDEX}");
     let site = template.render(&list_of_lists)?;
-    debug!("Rendered {}", SITE_INDEX);
+    debug!("Rendered {SITE_INDEX}");
 
     let site = if minify {
         let original_size = site.len();
-        debug!(
-            "Minifying {} (original size: {})",
-            SITE_INDEX, original_size
-        );
+        debug!("Minifying {SITE_INDEX} (original size: {original_size})",);
 
         let site = site.minify()?;
 
         debug!(
-            "Minified {}: {:.1}% (new size: {})",
-            SITE_INDEX,
+            "Minified {SITE_INDEX}: {:.1}% (new size: {})",
             100.0 * (site.len() as f64 / original_size as f64),
             site.len()
         );

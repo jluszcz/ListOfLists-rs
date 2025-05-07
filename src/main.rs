@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::{Arg, ArgAction, Command};
-use list_of_lists::generator;
+use lambda_utils::set_up_logger;
+use list_of_lists::{APP_NAME, generator};
 use log::debug;
 
 #[derive(Debug)]
@@ -83,8 +84,9 @@ fn parse_args() -> Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = parse_args();
-    list_of_lists::set_up_logger(module_path!(), args.verbose)?;
-    debug!("{:?}", args);
+
+    set_up_logger(APP_NAME, module_path!(), args.verbose)?;
+    debug!("{args:?}");
 
     generator::update_site(args.site_name, args.site_url, args.use_s3, args.minify).await
 }

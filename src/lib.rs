@@ -1,13 +1,13 @@
 use anyhow::{Result, anyhow};
-use log::LevelFilter;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 use std::collections::HashSet;
 
 pub mod generator;
 
-pub static SITE_NAME_VAR: &str = "LOL_SITE";
-pub static SITE_URL_VAR: &str = "LOL_SITE_URL";
+pub const APP_NAME: &str = "list-of-lists";
+
+pub const SITE_NAME_VAR: &str = "LOL_SITE";
+pub const SITE_URL_VAR: &str = "LOL_SITE_URL";
 
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Eq, PartialEq))]
@@ -83,35 +83,6 @@ pub struct FooterItem {
     pub title: Option<String>,
 }
 
-pub fn set_up_logger<T>(calling_module: T, verbose: bool) -> Result<()>
-where
-    T: Into<Cow<'static, str>>,
-{
-    let level = if verbose {
-        LevelFilter::Debug
-    } else {
-        LevelFilter::Info
-    };
-
-    let _ = fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "{} [{}] [{}] {}",
-                chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ"),
-                record.target(),
-                record.level(),
-                message
-            ))
-        })
-        .level(LevelFilter::Warn)
-        .level_for("list_of_lists", level)
-        .level_for(calling_module, level)
-        .chain(std::io::stdout())
-        .apply();
-
-    Ok(())
-}
-
 pub mod s3util {
     use super::*;
     use aws_sdk_s3::primitives::ByteStream;
@@ -123,7 +94,7 @@ pub mod s3util {
         bucket_name: &str,
         object_name: &str,
     ) -> Result<Bytes> {
-        debug!("Reading {}:{} from S3", bucket_name, object_name);
+        debug!("Reading {bucket_name}:{object_name} from S3");
         let bytes = s3_client
             .get_object()
             .bucket(bucket_name)
@@ -134,7 +105,7 @@ pub mod s3util {
             .collect()
             .await?
             .into_bytes();
-        debug!("Read {}:{} from S3", bucket_name, object_name);
+        debug!("Read {bucket_name}:{object_name} from S3");
 
         Ok(bytes)
     }
@@ -146,7 +117,7 @@ pub mod s3util {
         content_type: &str,
         data: &[u8],
     ) -> Result<()> {
-        debug!("Uploading {}:{} to S3", bucket_name, object_name);
+        debug!("Uploading {bucket_name}:{object_name} to S3");
         s3_client
             .put_object()
             .bucket(bucket_name)
@@ -155,7 +126,7 @@ pub mod s3util {
             .body(ByteStream::from(Bytes::from(Vec::from(data))))
             .send()
             .await?;
-        debug!("Uploaded {}:{} to S3", bucket_name, object_name);
+        debug!("Uploaded {bucket_name}:{object_name} to S3");
 
         Ok(())
     }
@@ -165,14 +136,14 @@ pub mod s3util {
         bucket_name: &str,
         object_name: &str,
     ) -> Result<bool> {
-        debug!("Checking {}:{} on S3", bucket_name, object_name);
+        debug!("Checking {bucket_name}:{object_name} on S3");
         let response = s3_client
             .head_object()
             .bucket(bucket_name)
             .key(object_name)
             .send()
             .await;
-        debug!("Checked {}:{} on S3", bucket_name, object_name);
+        debug!("Checked {bucket_name}:{object_name} on S3");
 
         Ok(response.is_ok())
     }
