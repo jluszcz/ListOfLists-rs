@@ -266,21 +266,31 @@ resource "aws_iam_role" "lambda" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
-data "aws_iam_policy_document" "cw_logs" {
+data "aws_iam_policy_document" "cw" {
   statement {
-    actions = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:Describe*"]
-    resources = ["arn:aws:logs:${var.aws_region}:${var.aws_acct_id}:*"]
+    actions = ["cloudwatch:PutMetricData"]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "cloudwatch:namespace"
+      values = ["list_of_lists"]
+    }
   }
 }
 
-resource "aws_iam_policy" "cw_logs" {
-  name   = "${var.site_name}.cw_logs"
-  policy = data.aws_iam_policy_document.cw_logs.json
+resource "aws_iam_policy" "cw" {
+  name   = "${var.site_name}.cw"
+  policy = data.aws_iam_policy_document.cw.json
 }
 
-resource "aws_iam_role_policy_attachment" "cw_logs" {
+resource "aws_iam_role_policy_attachment" "cw" {
   role       = aws_iam_role.lambda.name
-  policy_arn = aws_iam_policy.cw_logs.arn
+  policy_arn = aws_iam_policy.cw.arn
+}
+
+resource "aws_iam_role_policy_attachment" "basic_execution_role_attachment" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 data "aws_iam_policy_document" "s3" {

@@ -1,6 +1,6 @@
 use aws_lambda_events::s3::S3Event;
 use lambda_runtime::{LambdaEvent, service_fn};
-use lambda_utils::set_up_logger;
+use lambda_utils::{emit_rustc_metric, set_up_logger};
 use list_of_lists::{APP_NAME, generator};
 use log::info;
 use serde_json::{Value, json};
@@ -21,6 +21,7 @@ async fn main() -> Result<(), LambdaError> {
 
 async fn function(event: LambdaEvent<Value>) -> Result<Value, LambdaError> {
     set_up_logger(APP_NAME, module_path!(), false)?;
+    emit_rustc_metric(APP_NAME).await;
 
     let site_name = env::var(list_of_lists::SITE_NAME_VAR)?;
     let site_url = env::var(list_of_lists::SITE_URL_VAR)?;
