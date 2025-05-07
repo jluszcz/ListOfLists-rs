@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 pub mod generator;
 
-pub const APP_NAME: &str = "list-of-lists";
+pub const APP_NAME: &str = "list_of_lists";
 
 pub const SITE_NAME_VAR: &str = "LOL_SITE";
 pub const SITE_URL_VAR: &str = "LOL_SITE_URL";
