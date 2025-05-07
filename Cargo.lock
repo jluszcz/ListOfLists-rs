@@ -1884,7 +1884,7 @@ dependencies = [
 [[package]]
 name = "lambda_utils"
 version = "0.1.0"
-source = "git+https://github.com//jluszcz/LambdaUtils-rs#89c14e0c19e4984617e8171cb2b8f2dc6e0e9564"
+source = "git+https://github.com//jluszcz/LambdaUtils-rs#3b738eebc60e8c70a5a8a12131cd4de49da063ed"
 dependencies = [
  "anyhow",
  "aws-config",
