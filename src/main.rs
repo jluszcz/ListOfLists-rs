@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Arg, ArgAction, Command};
-use lambda_utils::set_up_logger;
+use jluszcz_rust_utils::set_up_logger;
 use list_of_lists::{APP_NAME, generator};
 use log::debug;
 
