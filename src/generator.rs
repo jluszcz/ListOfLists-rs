@@ -98,22 +98,6 @@ impl Io {
 
         Ok(())
     }
-
-    async fn exists(&self, target: &str) -> Result<bool> {
-        match self {
-            Io::S3 {
-                s3_client,
-                site_bucket,
-                ..
-            } => s3util::exists(s3_client, site_bucket, target).await,
-
-            Io::LocalFile { path } => {
-                let path = path.join(target);
-                debug!("Checking if {path:?} exists");
-                Ok(fs::metadata(path).await.is_ok())
-            }
-        }
-    }
 }
 
 async fn read_template(io: &Io) -> Result<String> {
@@ -126,10 +110,6 @@ async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
     trace!("{list_of_lists:?}");
 
     list_of_lists.validate()
-}
-
-async fn card_image_exists(io: &Io) -> Result<bool> {
-    io.exists("images/card.png").await
 }
 
 fn div_id_safe(_: &State, value: String) -> Result<String, Error> {
@@ -154,15 +134,8 @@ pub async fn update_site(
 ) -> Result<()> {
     let io = Io::new(site_url.clone(), use_s3).await;
 
-    let (template, mut list_of_lists, card_image_exists) = tokio::try_join!(
-        read_template(&io),
-        read_list(&io, &site_name),
-        card_image_exists(&io),
-    )?;
-
-    if card_image_exists {
-        list_of_lists.card_image_url = Some(format!("https://{site_url}/images/card.png"));
-    }
+    let (template, list_of_lists) =
+        tokio::try_join!(read_template(&io), read_list(&io, &site_name),)?;
 
     let mut env = Environment::new();
     env.add_template(SITE_INDEX, &template)?;

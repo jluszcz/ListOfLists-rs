@@ -19,8 +19,6 @@ pub struct ListOfLists {
     pub footer_links: Vec<FooterItem>,
 
     pub footer: Option<Footer>,
-
-    pub card_image_url: Option<String>,
 }
 
 impl ListOfLists {
@@ -221,7 +219,6 @@ mod test {
     fn test_list_of_lists_serde() -> Result<()> {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
-            card_image_url: None,
             footer_links: vec![],
             footer: None,
             lists: vec![
@@ -264,7 +261,6 @@ mod test {
     fn test_list_of_lists_footer() -> Result<()> {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
-            card_image_url: None,
             footer_links: vec![],
             footer: Some(Footer {
                 imports: vec!["https://import.js".to_string()],
@@ -289,7 +285,6 @@ mod test {
     fn test_list_of_lists_legacy_footer() -> Result<()> {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
-            card_image_url: None,
             footer_links: vec![FooterItem {
                 url: "https://github.com".to_string(),
                 icon: "github".to_string(),

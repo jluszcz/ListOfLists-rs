@@ -24,10 +24,6 @@
     <meta property="og:title" content="{{ title }}">
     <meta name="twitter:title" content="{{ title }}">
     <meta property="og:type" content="website">
-    {%- if card_image_url %}
-    <meta property="og:image" content="{{ card_image_url | safe }}">
-    <meta name="twitter:image" content="{{ card_image_url | safe }}">
-    {%- endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 </head>
 <body class="d-flex flex-column min-vh-100">
