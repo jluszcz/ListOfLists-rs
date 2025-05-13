@@ -86,14 +86,6 @@ resource "aws_s3_object" "favicon" {
   etag = filemd5("buckets/${var.site_url}/images/favicon.ico")
 }
 
-resource "aws_s3_object" "card_image" {
-  count  = fileexists("buckets/${var.site_url}/images/card.png") ? 1 : 0
-  bucket = aws_s3_bucket.site.id
-  key    = "images/card.png"
-  source = "buckets/${var.site_url}/images/card.png"
-  etag = filemd5("buckets/${var.site_url}/images/card.png")
-}
-
 resource "aws_acm_certificate" "cert" {
   provider          = aws.us_east_1
   domain_name       = var.site_url
@@ -297,11 +289,6 @@ data "aws_iam_policy_document" "s3" {
   statement {
     actions = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.site.arn}/index.html"]
-  }
-
-  statement {
-    actions = ["s3:GetObject", "s3:HeadObject"]
-    resources = ["${aws_s3_bucket.site.arn}/images/card.png"]
   }
 
   statement {
