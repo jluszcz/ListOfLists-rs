@@ -222,8 +222,8 @@ mod test {
             footer_links: vec![],
             footer: None,
             lists: vec![
-                List::new("Letters", true, false, &vec!["A", "B", "C"]),
-                List::new("Numbers", false, false, &vec!["1", "2", "3"]),
+                List::new("Letters", true, false, &["A", "B", "C"]),
+                List::new("Numbers", false, false, &["1", "2", "3"]),
                 List::from_items(
                     "Tooltip",
                     false,
@@ -245,14 +245,14 @@ mod test {
 
     #[test]
     fn test_list_validation_duplicates_allowed() {
-        let l = List::new("Letters", false, true, &vec!["A", "A"]);
+        let l = List::new("Letters", false, true, &["A", "A"]);
 
         assert!(l.validate().is_ok());
     }
 
     #[test]
     fn test_list_validation_duplicates_disallowed() {
-        let l = List::new("Letters", false, false, &vec!["A", "A"]);
+        let l = List::new("Letters", false, false, &["A", "A"]);
 
         assert!(l.validate().is_err());
     }
@@ -270,7 +270,7 @@ mod test {
                     title: Some("GitHub".to_string()),
                 }],
             }),
-            lists: vec![List::new("Letters", true, false, &vec!["A", "B", "C"])],
+            lists: vec![List::new("Letters", true, false, &["A", "B", "C"])],
         };
 
         let serialized = serde_json::to_string(&list_of_lists)?;
@@ -291,7 +291,7 @@ mod test {
                 title: None,
             }],
             footer: None,
-            lists: vec![List::new("Letters", true, false, &vec!["A", "B", "C"])],
+            lists: vec![List::new("Letters", true, false, &["A", "B", "C"])],
         };
 
         let serialized = serde_json::to_string(&list_of_lists)?;

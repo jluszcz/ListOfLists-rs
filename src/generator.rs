@@ -82,7 +82,7 @@ impl Io {
 
             Io::LocalFile { path } => {
                 let path = path.join(target);
-                debug!("Writing to {:?}", path);
+                debug!("Writing to {path:?}");
                 let res = fs::write(&path, content).await;
                 debug!(
                     "{} {path:?}",

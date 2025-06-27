@@ -16,7 +16,7 @@ clap = { version = "4.5", features = ["env"] }
 fern = "0.7"
 html5minify = "0.3"
 jluszcz_rust_utils = { git = "https://github.com//jluszcz/rust-utils" }
-lambda_runtime = "0.13"
+lambda_runtime = "0.14"
 log = "0.4"
 minijinja = "2.*"
 regex = "1.11"
