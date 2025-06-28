@@ -207,6 +207,15 @@ resource "aws_s3_bucket_lifecycle_configuration" "generator" {
 
     status = "Enabled"
   }
+
+  rule {
+    id     = "abort-mpu"
+    status = "Enabled"
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
 }
 
 resource "aws_route53_zone" "zone" {
