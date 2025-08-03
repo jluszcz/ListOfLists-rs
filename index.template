@@ -97,7 +97,7 @@
                 {%- for list_item in lists if not list_item['hidden'] %}
                     <li class="nav-item" role="presentation">
                         <span data-bs-toggle="collapse" data-bs-target="#navbarContent">
-                            <a class="nav-link {{ 'active' if loop.first else '' }}" data-bs-toggle="tab" href="#tab_{{ list_item['title'] | div_id_safe }}" role="tab" aria-controls="tab_{{ list_item['title'] | div_id_safe }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ list_item['title'] }}</a>
+                            <a class="nav-link {{ 'active' if loop.first else '' }}" id="nav-link-{{ list_item['title'] | div_id_safe }}" data-bs-toggle="tab" href="#tab_{{ list_item['title'] | div_id_safe }}" role="tab" aria-controls="tab_{{ list_item['title'] | div_id_safe }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ list_item['title'] }}</a>
                         </span>
                     </li>
                 {%- endfor %}
