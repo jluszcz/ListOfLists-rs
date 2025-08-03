@@ -113,7 +113,7 @@
             <ol>
             {%- for item in list_item['list'] %}
                 {%- if item is mapping %}
-                <li><span class="hover" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ item['tooltip'] }}">{{ item['item'] }}</span></li>
+                <li><span class="hover" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ item['tooltip'] }}" aria-label="{{ item['item'] }}, {{ item['tooltip'] }}" role="button" tabindex="0">{{ item['item'] }}</span></li>
                 {%- else %}
                 <li>{{ item }}</li>
                 {%- endif %}
@@ -143,14 +143,37 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js" integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+" crossorigin="anonymous"></script>
 
     <script>
-        // Initialize tooltips with error handling
+        // Initialize tooltips with enhanced accessibility
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
                     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-                    [...tooltipTriggerList].map(tooltipTriggerEl => {
+                    [...tooltipTriggerList].map((tooltipTriggerEl, index) => {
                         try {
-                            return new bootstrap.Tooltip(tooltipTriggerEl);
+                            // Create unique ID for tooltip
+                            const tooltipId = 'tooltip-' + Date.now() + '-' + index;
+
+                            // Initialize Bootstrap tooltip with accessibility options
+                            const tooltip = new bootstrap.Tooltip(tooltipTriggerEl, {
+                                boundary: 'viewport',
+                                fallbackPlacements: ['top', 'bottom', 'left']
+                            });
+
+                            // Enhanced accessibility: ensure aria-describedby is set when tooltip shows
+                            tooltipTriggerEl.addEventListener('shown.bs.tooltip', function() {
+                                const tooltipElement = document.querySelector('.tooltip[role="tooltip"]');
+                                if (tooltipElement && !tooltipElement.id) {
+                                    tooltipElement.id = tooltipId;
+                                    tooltipTriggerEl.setAttribute('aria-describedby', tooltipId);
+                                }
+                            });
+
+                            // Clean up aria-describedby when tooltip hides
+                            tooltipTriggerEl.addEventListener('hidden.bs.tooltip', function() {
+                                tooltipTriggerEl.removeAttribute('aria-describedby');
+                            });
+
+                            return tooltip;
                         } catch (error) {
                             console.warn('Failed to initialize tooltip:', error);
                             return null;
