@@ -3,6 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="description" content="{{ title }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#212529">
+
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
 
@@ -11,33 +16,88 @@
     {{ import | safe }}
     {%- endfor %}
     {%- elif footer_links %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous">
     {%- endif %}
 
     <style>
-        @media (min-width: 992px) { .collapse, .collapsing { transition: none !important; } }
-        .hover { border-bottom: 1px dashed; }
+        :root {
+            --bs-dark: #212529;
+            --hover-border-color: #6c757d;
+        }
+
+        /* Disable collapse animation on larger screens for better UX */
+        @media (min-width: 992px) {
+            .collapse, .collapsing {
+                transition: none !important;
+            }
+        }
+
+        /* Improved tooltip hover styling */
+        .hover {
+            border-bottom: 1px dashed var(--hover-border-color);
+            cursor: help;
+        }
+
+        /* Better focus styles for accessibility */
+        .nav-link:focus {
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+
+        /* Touch target optimization for mobile */
+        @media (max-width: 767px) {
+            .nav-link {
+                padding: 0.75rem 1rem;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        /* Smooth scrolling for tab content */
+        .tab-content {
+            scroll-behavior: smooth;
+        }
     </style>
 
     <title>{{ title }}</title>
     <link rel="icon" href="images/favicon.ico">
+
+    <!-- Enhanced SEO and Social Media Meta Tags -->
     <meta property="og:title" content="{{ title }}">
-    <meta name="twitter:title" content="{{ title }}">
+    <meta property="og:description" content="{{ title }} - A curated list collection">
     <meta property="og:type" content="website">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ title }}">
+    <meta name="twitter:description" content="{{ title }} - A curated list collection">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "{{ title }}",
+      "description": "{{ title }} - A curated list collection",
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": "{{ title }}",
+        "numberOfItems": {{ lists | length }}
+      }
+    }
+    </script>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg bg-dark navbar-dark sticky-top">
-        <div class="container fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+    <nav class="navbar navbar-expand-lg bg-dark navbar-dark sticky-top" role="navigation" aria-label="Main navigation">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav nav">
+                <ul class="navbar-nav nav" role="tablist" aria-label="List categories">
                 {%- for list_item in lists if not list_item['hidden'] %}
-                    <li class="nav-item">
+                    <li class="nav-item" role="presentation">
                         <span data-bs-toggle="collapse" data-bs-target="#navbarContent">
-                            <a class="nav-link {{ 'active' if loop.first else '' }}" data-bs-toggle="tab" href="#tab_{{ list_item['title'] | div_id_safe }}">{{ list_item['title'] }}</a>
+                            <a class="nav-link {{ 'active' if loop.first else '' }}" id="nav-link-{{ list_item['title'] | div_id_safe }}" data-bs-toggle="tab" href="#tab_{{ list_item['title'] | div_id_safe }}" role="tab" aria-controls="tab_{{ list_item['title'] | div_id_safe }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ list_item['title'] }}</a>
                         </span>
                     </li>
                 {%- endfor %}
@@ -46,14 +106,14 @@
         </div>
     </nav>
 
-    <div class="tab-content pt-2">
+    <main class="tab-content pt-2" role="main" aria-label="List content">
     {%- for list_item in lists if not list_item['hidden'] %}
-        <div class="tab-pane container fluid {{ 'active' if loop.first else 'fade' }}" id="tab_{{ list_item['title'] | div_id_safe }}">
+        <div class="tab-pane container-fluid {{ 'active' if loop.first else 'fade' }}" id="tab_{{ list_item['title'] | div_id_safe }}" role="tabpanel" aria-labelledby="nav-link-{{ list_item['title'] | div_id_safe }}">
             <h3>{{ list_item['title'] }}</h3>
             <ol>
             {%- for item in list_item['list'] %}
                 {%- if item is mapping %}
-                <li><span class="hover" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ item['tooltip'] }}">{{ item['item'] }}</span></li>
+                <li><span class="hover" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ item['tooltip'] }}" aria-label="{{ item['item'] }}, {{ item['tooltip'] }}" role="button" tabindex="0">{{ item['item'] }}</span></li>
                 {%- else %}
                 <li>{{ item }}</li>
                 {%- endif %}
@@ -61,11 +121,11 @@
             </ol>
         </div>
     {%- endfor %}
-    </div>
+    </main>
 
     {%- if footer or footer_links %}
-    <footer class="footer bg-dark sticky-bottom mt-auto">
-        <div class="container fluid">
+    <footer class="footer bg-dark sticky-bottom mt-auto" role="contentinfo" aria-label="Site footer">
+        <div class="container-fluid">
             {%- if footer %}
             {%- for link in footer['links'] %}
             <a class="fs-4 me-3 link-light" href="{{ link.url | safe }}" {%- if link.title %} title="{{ link.title }}"{%- endif %} target="_blank"><i class="{{ link.icon }}"></i></a>
@@ -82,7 +142,60 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js" integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+" crossorigin="anonymous"></script>
 
-    <script type="text/javascript">var tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');var tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));</script>
+    <script>
+        // Initialize tooltips with enhanced accessibility
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    [...tooltipTriggerList].map((tooltipTriggerEl, index) => {
+                        try {
+                            // Create unique ID for tooltip
+                            const tooltipId = 'tooltip-' + Date.now() + '-' + index;
+
+                            // Initialize Bootstrap tooltip with accessibility options
+                            const tooltip = new bootstrap.Tooltip(tooltipTriggerEl, {
+                                boundary: 'viewport',
+                                fallbackPlacements: ['top', 'bottom', 'left']
+                            });
+
+                            // Enhanced accessibility: ensure aria-describedby is set when tooltip shows
+                            tooltipTriggerEl.addEventListener('shown.bs.tooltip', function() {
+                                const tooltipElement = document.querySelector('.tooltip[role="tooltip"]');
+                                if (tooltipElement && !tooltipElement.id) {
+                                    tooltipElement.id = tooltipId;
+                                    tooltipTriggerEl.setAttribute('aria-describedby', tooltipId);
+                                }
+                            });
+
+                            // Clean up aria-describedby when tooltip hides
+                            tooltipTriggerEl.addEventListener('hidden.bs.tooltip', function() {
+                                tooltipTriggerEl.removeAttribute('aria-describedby');
+                            });
+
+                            return tooltip;
+                        } catch (error) {
+                            console.warn('Failed to initialize tooltip:', error);
+                            return null;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('Bootstrap tooltips failed to initialize:', error);
+            }
+        });
+
+        // Enhance keyboard navigation for tabs
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                const activeElement = document.activeElement;
+                if (activeElement && activeElement.getAttribute('data-bs-toggle') === 'tab') {
+                    event.preventDefault();
+                    activeElement.click();
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
