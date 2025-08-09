@@ -12,14 +12,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `cargo check` - Check for compilation errors without building
 - `cargo clippy -- -D warnings` - Run Rust linter for code quality checks
 
-### Making Changes
-
-After making any changes, run the build/test commands above and make sure they pass, correcting any errors.
-
-When fixing test failures, you MUST fix the test rather than remove tests. When in doubt, ask.
-
-Before committing code, run `pre-commit run` to verify that no pre-commit hooks will fail.
-
 ### Running the Application
 
 - `cargo run --bin main -- --help` - Show CLI help for the main generator
