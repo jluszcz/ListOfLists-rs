@@ -1,4 +1,5 @@
 *zip
+.claude/
 .terraform*
 /.idea
 /target
