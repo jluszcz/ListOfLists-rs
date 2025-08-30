@@ -6,7 +6,7 @@ on:
       - main
 
     paths:
-      - '.github/workflows/build-and-test.yml'
+      - '.github/workflows/*'
       - 'Cargo**'
       - 'src/**/*.rs'
 
