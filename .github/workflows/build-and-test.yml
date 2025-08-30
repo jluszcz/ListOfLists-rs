@@ -6,7 +6,7 @@ on:
       - main
 
     paths:
-      - '.github/workflows/*'
+      - '.github/workflows/**'
       - 'Cargo**'
       - 'src/**/*.rs'
 
