@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build and Test
 
 on:
   push:
@@ -6,15 +6,19 @@ on:
       - main
 
     paths:
-      - '.github/workflows/build-and-deploy.yml'
+      - '.github/workflows/build-and-test.yml'
       - 'Cargo**'
       - 'src/**/*.rs'
+
+  pull_request:
+    branches:
+      - main
 
 env:
   PROJECT: list-of-lists
 
 jobs:
-  build-and-package:
+  build-and-test:
     runs-on: ubuntu-24.04-arm
 
     env:
@@ -45,6 +49,23 @@ jobs:
       - name: Lint
         run: cargo clippy --target ${{ env.BUILD_TARGET }} -- -D warnings
 
+  package:
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-test
+    runs-on: ubuntu-24.04-arm
+
+    env:
+      BUILD_TARGET: aarch64-unknown-linux-musl
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update and Configure Rust
+        run: |
+          sudo apt-get install -y musl-tools
+          rustup target add ${{ env.BUILD_TARGET }}
+          rustup update
+
       - name: Package
         run: |
           cargo build --release --target ${{ env.BUILD_TARGET }}
@@ -57,32 +78,3 @@ jobs:
           name: package
           path: ${{ env.PROJECT }}.zip
           retention-days: 1
-
-  deploy:
-    needs: build-and-package
-
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Download Package
-        uses: actions/download-artifact@v4
-        with:
-          name: package
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT }}.github-deploy
-          role-session-name: github-deploy
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-
-      - name: Deploy Lambda
-        env:
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          AWS_BUCKET: ${{ secrets.CODE_BUCKET }}
-          FUNCTIONS: ${{ vars.FUNCTIONS }}
-        run: aws s3 cp --metadata 'function.names="'${FUNCTIONS}'"' ${{ env.PROJECT }}.zip s3://${AWS_BUCKET}/
