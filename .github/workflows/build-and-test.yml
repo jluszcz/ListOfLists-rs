@@ -49,30 +49,15 @@ jobs:
       - name: Lint
         run: cargo clippy --target ${{ env.BUILD_TARGET }} -- -D warnings
 
-  package:
-    if: github.ref == 'refs/heads/main'
-    needs: build-and-test
-    runs-on: ubuntu-24.04-arm
-
-    env:
-      BUILD_TARGET: aarch64-unknown-linux-musl
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Update and Configure Rust
-        run: |
-          sudo apt-get install -y musl-tools
-          rustup target add ${{ env.BUILD_TARGET }}
-          rustup update
-
       - name: Package
+        if: github.event_name == 'push'
         run: |
           cargo build --release --target ${{ env.BUILD_TARGET }}
           cp target/${{ env.BUILD_TARGET }}/release/lambda bootstrap
           zip -j ${{ env.PROJECT }}.zip bootstrap
 
       - name: Upload Package
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: package
