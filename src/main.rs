@@ -4,6 +4,7 @@ use jluszcz_rust_utils::{Verbosity, set_up_logger};
 use list_of_lists::{APP_NAME, generator};
 use log::debug;
 
+#[derive(Debug)]
 struct Args {
     site_name: String,
     site_url: String,
@@ -33,9 +34,8 @@ fn parse_args() -> Args {
                 .help("Site URL, e.g. 'foo.list'."),
         )
         .arg(
-            Arg::new("verbose")
+            Arg::new("verbosity")
                 .short('v')
-                .long("verbose")
                 .action(ArgAction::Count)
                 .help("Verbose mode. Use -v for DEBUG, -vv for TRACE level logging."),
         )
@@ -65,12 +65,7 @@ fn parse_args() -> Args {
         .map(|l| l.into())
         .unwrap();
 
-    let verbose_count = matches.get_count("verbose");
-    let verbosity = match verbose_count {
-        0 => Verbosity::Info,
-        1 => Verbosity::Debug,
-        _ => Verbosity::Trace,
-    };
+    let verbosity = matches.get_count("verbose").into();
 
     let use_s3 = matches.get_flag("remote");
 
@@ -88,12 +83,8 @@ fn parse_args() -> Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = parse_args();
-
     set_up_logger(APP_NAME, module_path!(), args.verbosity)?;
-    debug!(
-        "Running with site_name: {}, site_url: {}, use_s3: {}, minify: {}",
-        args.site_name, args.site_url, args.use_s3, args.minify
-    );
+    debug!("Args: {args:?}");
 
     generator::update_site(args.site_name, args.site_url, args.use_s3, args.minify).await
 }
