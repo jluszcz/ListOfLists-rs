@@ -1,0 +1,36 @@
+name: Update Star List Template
+
+on:
+  push:
+    branches:
+      - main
+
+    paths:
+      - '.github/workflows/update-index-starlist.yml'
+      - 'index.template'
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      SITE: starlist
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.SITE }}.github-update
+          role-session-name: github-upload
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Upload to S3
+        env:
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        run: aws s3 cp index.template s3://${{ secrets.STARLIST_BUCKET }}/
