@@ -65,7 +65,7 @@ fn parse_args() -> Args {
         .map(|l| l.into())
         .unwrap();
 
-    let verbosity = matches.get_count("verbose").into();
+    let verbosity = matches.get_count("verbosity").into();
 
     let use_s3 = matches.get_flag("remote");
 
