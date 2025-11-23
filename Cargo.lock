@@ -1741,7 +1741,7 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 [[package]]
 name = "jluszcz_rust_utils"
 version = "0.1.0"
-source = "git+https://github.com//jluszcz/rust-utils#255ff85f1211d9efc28409113ffd33174b7dc83d"
+source = "git+https://github.com//jluszcz/rust-utils#77f90648435bec0720d8754cb5bc9f6d5c701530"
 dependencies = [
  "anyhow",
  "aws-config",
