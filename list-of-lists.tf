@@ -1,5 +1,9 @@
 terraform {
-  backend "s3" {}
+  backend "s3" {
+    bucket = "jluszcz-tf-state"
+    key    = "list-of-lists"
+    region = "us-east-2"
+  }
 }
 
 # Sourced from environment variables named TF_VAR_${VAR_NAME}
