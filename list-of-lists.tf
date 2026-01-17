@@ -218,6 +218,17 @@ resource "aws_s3_bucket_lifecycle_configuration" "generator" {
   }
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "generator" {
+  bucket = aws_s3_bucket.generator.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
 resource "aws_route53_zone" "zone" {
   name    = var.site_url
   comment = "${var.site_name} Hosted Zone"
