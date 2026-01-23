@@ -82,17 +82,6 @@ resource "aws_s3_bucket_policy" "site" {
   policy = data.aws_iam_policy_document.site.json
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
-  bucket = aws_s3_bucket.site.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
-    }
-    bucket_key_enabled = true
-  }
-}
-
 resource "aws_s3_object" "favicon" {
   count  = fileexists("buckets/${var.site_url}/images/favicon.ico") ? 1 : 0
   bucket = aws_s3_bucket.site.id
@@ -230,17 +219,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "generator" {
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
     }
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "generator" {
-  bucket = aws_s3_bucket.generator.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
-    }
-    bucket_key_enabled = true
   }
 }
 
