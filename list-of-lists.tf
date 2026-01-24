@@ -7,8 +7,6 @@ terraform {
 }
 
 # Sourced from environment variables named TF_VAR_${VAR_NAME}
-variable "aws_acct_id" {}
-
 variable "site_name" {}
 
 variable "site_url" {}
@@ -60,11 +58,11 @@ resource "aws_s3_bucket_website_configuration" "site" {
 
 data "aws_iam_policy_document" "site" {
   statement {
-    actions = ["s3:GetObject"]
+    actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.site.arn}/*"]
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["cloudfront.amazonaws.com"]
     }
 
@@ -87,14 +85,14 @@ resource "aws_s3_object" "favicon" {
   bucket = aws_s3_bucket.site.id
   key    = "images/favicon.ico"
   source = "buckets/${var.site_url}/images/favicon.ico"
-  etag = filemd5("buckets/${var.site_url}/images/favicon.ico")
+  etag   = filemd5("buckets/${var.site_url}/images/favicon.ico")
 }
 
 resource "aws_acm_certificate" "cert" {
-  provider          = aws.us_east_1
-  domain_name       = var.site_url
+  provider                  = aws.us_east_1
+  domain_name               = var.site_url
   subject_alternative_names = ["www.${var.site_url}"]
-  validation_method = "DNS"
+  validation_method         = "DNS"
 }
 
 resource "aws_acm_certificate_validation" "cert" {
@@ -116,7 +114,7 @@ resource "aws_route53_record" "cert_validation" {
   name            = each.value.name
   type            = each.value.type
   zone_id         = aws_route53_zone.zone.id
-  records = [each.value.record]
+  records         = [each.value.record]
   ttl             = 60
 }
 
@@ -143,8 +141,8 @@ resource "aws_cloudfront_distribution" "site" {
   aliases = ["www.${var.site_url}", var.site_url]
 
   default_cache_behavior {
-    allowed_methods = ["GET", "HEAD"]
-    cached_methods = ["GET", "HEAD"]
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
     target_origin_id = "site_bucket_origin"
 
     forwarded_values {
@@ -270,7 +268,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["lambda.amazonaws.com"]
     }
     actions = ["sts:AssumeRole"]
@@ -284,12 +282,12 @@ resource "aws_iam_role" "lambda" {
 
 data "aws_iam_policy_document" "cw" {
   statement {
-    actions = ["cloudwatch:PutMetricData"]
+    actions   = ["cloudwatch:PutMetricData"]
     resources = ["*"]
     condition {
       test     = "StringEquals"
       variable = "cloudwatch:namespace"
-      values = ["list_of_lists"]
+      values   = ["list_of_lists"]
     }
   }
 }
@@ -311,12 +309,12 @@ resource "aws_iam_role_policy_attachment" "basic_execution_role_attachment" {
 
 data "aws_iam_policy_document" "s3" {
   statement {
-    actions = ["s3:PutObject"]
+    actions   = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.site.arn}/index.html"]
   }
 
   statement {
-    actions = ["s3:GetObject"]
+    actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.generator.arn}/*"]
   }
 }
@@ -336,7 +334,7 @@ resource "aws_s3_bucket_notification" "notification" {
 
   lambda_function {
     lambda_function_arn = aws_lambda_function.lambda.arn
-    events = ["s3:ObjectCreated:*"]
+    events              = ["s3:ObjectCreated:*"]
   }
 }
 
@@ -349,8 +347,8 @@ resource "aws_lambda_permission" "allow_bucket" {
 }
 
 resource "aws_lambda_function" "lambda" {
-  function_name = "${var.site_name}"
-  s3_bucket     = "${data.aws_s3_bucket.code_bucket.bucket}"
+  function_name = var.site_name
+  s3_bucket     = data.aws_s3_bucket.code_bucket.bucket
   s3_key        = "list-of-lists.zip"
   role          = aws_iam_role.lambda.arn
   architectures = ["arm64"]
@@ -397,7 +395,7 @@ resource "aws_iam_role" "github_update" {
       {
         Effect = "Allow",
         Principal = {
-          Federated = "${data.aws_iam_openid_connect_provider.github.arn}"
+          Federated = data.aws_iam_openid_connect_provider.github.arn
         },
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
@@ -423,7 +421,7 @@ resource "aws_iam_role_policy_attachment" "github_update" {
 
 data "aws_iam_policy_document" "github_deploy" {
   statement {
-    actions = ["s3:PutObject"]
+    actions   = ["s3:PutObject"]
     resources = ["${data.aws_s3_bucket.code_bucket.arn}/list-of-lists.zip"]
   }
 }
@@ -442,7 +440,7 @@ resource "aws_iam_role" "github_deploy" {
       {
         Effect = "Allow",
         Principal = {
-          Federated = "${data.aws_iam_openid_connect_provider.github.arn}"
+          Federated = data.aws_iam_openid_connect_provider.github.arn
         },
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
