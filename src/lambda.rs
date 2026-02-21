@@ -5,21 +5,18 @@ use list_of_lists::{APP_NAME, generator};
 use log::info;
 use serde_json::{Value, json};
 use std::env;
-use std::error::Error;
-
-type LambdaError = Box<dyn Error + Send + Sync + 'static>;
 
 const USE_S3: bool = true;
 const MINIFY: bool = true;
 
 #[tokio::main]
-async fn main() -> Result<(), LambdaError> {
+async fn main() -> Result<(), lambda_runtime::Error> {
     let func = service_fn(function);
     lambda_runtime::run(func).await?;
     Ok(())
 }
 
-async fn function(event: LambdaEvent<Value>) -> Result<Value, LambdaError> {
+async fn function(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Error> {
     lambda::init(APP_NAME, module_path!(), false).await?;
 
     let site_name = env::var(list_of_lists::SITE_NAME_VAR)?;
