@@ -25,7 +25,7 @@ jobs:
       BUILD_TARGET: aarch64-unknown-linux-musl
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Update and Configure Rust
         run: |
@@ -58,7 +58,7 @@ jobs:
 
       - name: Upload Package
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: package
           path: ${{ env.PROJECT }}.zip
@@ -76,7 +76,7 @@ jobs:
     steps:
       - name: Download Package
         if: github.event_name == 'push'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: package
 
