@@ -11,8 +11,6 @@ variable "site_name" {}
 
 variable "site_url" {}
 
-variable "code_bucket" {}
-
 variable "github_org" {}
 
 variable "github_repo" {}
@@ -31,8 +29,10 @@ provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_s3_bucket" "code_bucket" {
-  bucket = var.code_bucket
+  bucket = format("code-%s-%s-an", data.aws_caller_identity.current.account_id, var.aws_region)
 }
 
 resource "aws_s3_bucket" "site" {
