@@ -10,67 +10,71 @@ ListOfLists generates a static website, hosted on AWS in an S3 bucket, from a JS
 
 ```json
 {
-    "title": "The List",
-    "lists": [
+  "title": "The List",
+  "lists": [
+    {
+      "title": "Letters",
+      "hidden": true,
+      "list": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "title": "Numbers",
+      "list": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "title": "With Tooltips",
+      "list": [
+        "Foo",
+        "Bar",
+        "Baz",
         {
-            "title": "Letters",
-            "hidden": true,
-            "list": [
-                "A",
-                "B",
-                "C"
-            ]
-        },
-        {
-            "title": "Numbers",
-            "list": [
-                "1",
-                "2",
-                "3"
-            ]
-        },
-        {
-            "title": "With Tooltips",
-            "list": [
-                "Foo",
-                "Bar",
-                "Baz",
-                {
-                    "item": "Quux",
-                    "tooltip": "Not many people know this one"
-                }
-            ]
+          "item": "Quux",
+          "tooltip": "Not many people know this one"
         }
-    ],
-    "footer": {
-        "imports": [
-            "<script src=\"https://kit.fontawesome.com/deadbeef.js\" crossorigin=\"anonymous\"></script>"
-        ],
-        "links": [
-            {
-                "url": "https://github.com/jluszcz/ListOfLists-rs",
-                "title": "GitHub",
-                "icon": "fa-brands fa-github"
-            }
-        ]
+      ]
     }
+  ],
+  "footer": {
+    "imports": [
+      "<script src=\"https://kit.fontawesome.com/deadbeef.js\" crossorigin=\"anonymous\"></script>"
+    ],
+    "links": [
+      {
+        "url": "https://github.com/jluszcz/ListOfLists-rs",
+        "title": "GitHub",
+        "icon": "fa-brands fa-github"
+      }
+    ]
+  }
 }
 ```
 
 ### List Fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `title` | string | required | Display title for the list |
-| `hidden` | bool | `false` | If `true`, the list is hidden by default |
-| `duplicates` | bool | `false` | If `false`, duplicate items cause a validation error |
-| `list` | array | required | Array of items (strings or objects with `item`/`tooltip`) |
+| Field        | Type   | Default  | Description                                               |
+|--------------|--------|----------|-----------------------------------------------------------|
+| `title`      | string | required | Display title for the list                                |
+| `hidden`     | bool   | `false`  | If `true`, the list is hidden by default                  |
+| `duplicates` | bool   | `false`  | If `false`, duplicate items cause a validation error      |
+| `list`       | array  | required | Array of items (strings or objects with `item`/`tooltip`) |
 
 ### Footers
 
-The `footer` object supports `imports` and `links`. Use `imports` to inject `<script>` or `<link>` tags (e.g. for icon libraries), and `links` to render footer icons. The `icon` field is passed as a CSS class, so it works with both [Bootstrap Icons](https://icons.getbootstrap.com) and [Font Awesome](https://fontawesome.com).
+The `footer` object supports `imports` and `links`. Use `imports` to inject `<script>` or `<link>` tags (e.g. for icon
+libraries), and `links` to render footer icons. The `icon` field is passed as a CSS class, so it works with
+both [Bootstrap Icons](https://icons.getbootstrap.com) and [Font Awesome](https://fontawesome.com).
 
-The legacy `footerLinks` top-level array is still supported for backwards compatibility; `icon` in that format is treated as a [Bootstrap Icon](https://icons.getbootstrap.com) name. When both `footerLinks` and `footer` are present, `footer` takes precedence.
+The legacy `footerLinks` top-level array is still supported for backwards compatibility; `icon` in that format is
+treated as a [Bootstrap Icon](https://icons.getbootstrap.com) name. When both `footerLinks` and `footer` are present,
+`footer` takes precedence.
 
 ## Local Development
 
@@ -87,13 +91,13 @@ cargo run --bin main -- --site-name <site_name> --site-url <site_url>
 
 ### CLI Flags
 
-| Flag | Env Var | Description |
-|---|---|---|
-| `-s`, `--site-name` | `LOL_SITE` | Site name (e.g. `burgerlist`) |
-| `-u`, `--site-url` | `LOL_SITE_URL` | Site URL (e.g. `burgerl.ist`) |
-| `-r`, `--remote` | | Use S3 instead of local files |
-| `-m`, `--minify` | | Minify the generated HTML |
-| `-v` / `-vv` | | Enable DEBUG / TRACE logging |
+| Flag                | Env Var        | Description                   |
+|---------------------|----------------|-------------------------------|
+| `-s`, `--site-name` | `LOL_SITE`     | Site name (e.g. `burgerlist`) |
+| `-u`, `--site-url`  | `LOL_SITE_URL` | Site URL (e.g. `burgerl.ist`) |
+| `-r`, `--remote`    |                | Use S3 instead of local files |
+| `-m`, `--minify`    |                | Minify the generated HTML     |
+| `-v` / `-vv`        |                | Enable DEBUG / TRACE logging  |
 
 ## Deploying to AWS
 
@@ -105,7 +109,6 @@ cargo run --bin main -- --site-name <site_name> --site-url <site_url>
 export LOL_SITE_URL="list-of-l.ist"
 export LOL_SITE=$(echo ${LOL_SITE_URL} | sed 's/\.//')
 
-export TF_VAR_aws_acct_id="123412341234"
 export TF_VAR_site_name=${LOL_SITE}
 export TF_VAR_site_url=${LOL_SITE_URL}
 ```
