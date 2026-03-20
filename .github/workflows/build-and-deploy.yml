@@ -92,6 +92,6 @@ jobs:
         if: github.event_name == 'push'
         env:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          AWS_BUCKET: ${{ secrets.CODE_BUCKET }}
+          AWS_BUCKET: code-${{ secrets.AWS_ACCOUNT_ID }}-${{ env.AWS_DEFAULT_REGION }}-an
           FUNCTIONS: ${{ vars.FUNCTIONS }}
         run: aws s3 cp --metadata 'function.names="'${FUNCTIONS}'"' ${{ env.PROJECT }}.zip s3://${AWS_BUCKET}/
