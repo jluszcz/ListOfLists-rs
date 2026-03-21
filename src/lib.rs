@@ -6,7 +6,7 @@ pub mod generator;
 
 pub const APP_NAME: &str = "list_of_lists";
 
-pub const SITE_NAME_VAR: &str = "LOL_SITE";
+pub const GENERATOR_BUCKET_VAR: &str = "LOL_GENERATOR_BUCKET";
 pub const SITE_URL_VAR: &str = "LOL_SITE_URL";
 
 #[derive(Debug, Serialize, Deserialize)]

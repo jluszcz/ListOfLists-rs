@@ -24,22 +24,24 @@ enum Io {
         site_bucket: String,
     },
     LocalFile {
-        path: PathBuf,
+        generator_path: PathBuf,
+        site_path: PathBuf,
     },
 }
 
 impl Io {
-    async fn new(site_url: String, use_s3: bool) -> Self {
+    async fn new(site_url: String, generator_bucket: String, use_s3: bool) -> Self {
         if use_s3 {
             let aws_config = ConfigLoader::default().load().await;
             Self::S3 {
                 s3_client: aws_sdk_s3::Client::new(&aws_config),
-                generator_bucket: format!("{site_url}-generator"),
+                generator_bucket,
                 site_bucket: site_url,
             }
         } else {
             Self::LocalFile {
-                path: Path::new("buckets").join(site_url),
+                generator_path: Path::new("buckets").join(generator_bucket),
+                site_path: Path::new("buckets").join(site_url),
             }
         }
     }
@@ -55,8 +57,8 @@ impl Io {
                 Ok(str::from_utf8(&bytes)?.into())
             }
 
-            Io::LocalFile { path } => {
-                let path = path.join(target);
+            Io::LocalFile { generator_path, .. } => {
+                let path = generator_path.join(target);
                 debug!("Reading {path:?}");
                 let res = fs::read_to_string(&path).await;
                 debug!(
@@ -80,8 +82,8 @@ impl Io {
                 ..
             } => s3util::put(s3_client, site_bucket, target, "text/html", content).await?,
 
-            Io::LocalFile { path } => {
-                let path = path.join(target);
+            Io::LocalFile { site_path, .. } => {
+                let path = site_path.join(target);
                 debug!("Writing to {path:?}");
                 let res = fs::write(&path, content).await;
                 debug!(
@@ -104,8 +106,8 @@ async fn read_template(io: &Io) -> Result<String> {
     io.read(SITE_INDEX_TEMPLATE).await
 }
 
-async fn read_list(io: &Io, site_name: &str) -> Result<ListOfLists> {
-    let content = io.read(&format!("{site_name}.json")).await?;
+async fn read_list(io: &Io, site_url: &str) -> Result<ListOfLists> {
+    let content = io.read(&format!("{site_url}.json")).await?;
     let list_of_lists: ListOfLists = serde_json::from_str(content.as_str())?;
     trace!("{list_of_lists:?}");
 
@@ -127,15 +129,15 @@ where
 }
 
 pub async fn update_site(
-    site_name: String,
     site_url: String,
+    generator_bucket: String,
     use_s3: bool,
     minify: bool,
 ) -> Result<()> {
-    let io = Io::new(site_url.clone(), use_s3).await;
+    let io = Io::new(site_url.clone(), generator_bucket, use_s3).await;
 
     let (template, list_of_lists) =
-        tokio::try_join!(read_template(&io), read_list(&io, &site_name),)?;
+        tokio::try_join!(read_template(&io), read_list(&io, &site_url),)?;
 
     let mut env = Environment::new();
     env.add_template(SITE_INDEX, &template)?;

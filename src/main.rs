@@ -6,8 +6,8 @@ use log::debug;
 
 #[derive(Debug)]
 struct Args {
-    site_name: String,
     site_url: String,
+    generator_bucket: String,
     verbosity: Verbosity,
     use_s3: bool,
     minify: bool,
@@ -18,20 +18,20 @@ fn parse_args() -> Args {
         .version("0.1")
         .author("Jacob Luszcz")
         .arg(
-            Arg::new("site-name")
-                .short('s')
-                .long("site-name")
-                .required(true)
-                .env(list_of_lists::SITE_NAME_VAR)
-                .help("Site name, e.g. foolist."),
-        )
-        .arg(
             Arg::new("site-url")
                 .short('u')
                 .long("site-url")
                 .required(true)
                 .env(list_of_lists::SITE_URL_VAR)
                 .help("Site URL, e.g. 'foo.list'."),
+        )
+        .arg(
+            Arg::new("generator-bucket")
+                .short('g')
+                .long("generator-bucket")
+                .default_value("generator")
+                .env(list_of_lists::GENERATOR_BUCKET_VAR)
+                .help("Generator bucket name. Defaults to 'generator' for local use."),
         )
         .arg(
             Arg::new("verbosity")
@@ -55,13 +55,13 @@ fn parse_args() -> Args {
         )
         .get_matches();
 
-    let site_name = matches
-        .get_one::<String>("site-name")
+    let site_url = matches
+        .get_one::<String>("site-url")
         .map(|l| l.into())
         .unwrap();
 
-    let site_url = matches
-        .get_one::<String>("site-url")
+    let generator_bucket = matches
+        .get_one::<String>("generator-bucket")
         .map(|l| l.into())
         .unwrap();
 
@@ -72,8 +72,8 @@ fn parse_args() -> Args {
     let minify = matches.get_flag("minify");
 
     Args {
-        site_name,
         site_url,
+        generator_bucket,
         verbosity,
         use_s3,
         minify,
@@ -86,5 +86,11 @@ async fn main() -> Result<()> {
     set_up_logger(APP_NAME, module_path!(), args.verbosity)?;
     debug!("Args: {args:?}");
 
-    generator::update_site(args.site_name, args.site_url, args.use_s3, args.minify).await
+    generator::update_site(
+        args.site_url,
+        args.generator_bucket,
+        args.use_s3,
+        args.minify,
+    )
+    .await
 }
