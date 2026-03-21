@@ -7,8 +7,6 @@ terraform {
 }
 
 # Sourced from environment variables named TF_VAR_${VAR_NAME}
-variable "site_name" {}
-
 variable "site_url" {}
 
 variable "github_org" {}
@@ -119,7 +117,7 @@ resource "aws_route53_record" "cert_validation" {
 }
 
 resource "aws_cloudfront_origin_access_control" "site_distribution_oac" {
-  name                              = var.site_name
+  name                              = var.site_url
   description                       = "OAC for ${var.site_url}"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -176,7 +174,8 @@ resource "aws_cloudfront_distribution" "site" {
 }
 
 resource "aws_s3_bucket" "generator" {
-  bucket = "${var.site_url}-generator"
+  bucket           = format("list-of-lists-%s-%s-an", data.aws_caller_identity.current.account_id, var.aws_region)
+  bucket_namespace = "account-regional"
 }
 
 resource "aws_s3_bucket_public_access_block" "generator" {
@@ -233,7 +232,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "generator" {
 
 resource "aws_route53_zone" "zone" {
   name    = var.site_url
-  comment = "${var.site_name} Hosted Zone"
+  comment = "${var.site_url} Hosted Zone"
 }
 
 resource "aws_route53_record" "record" {
@@ -261,7 +260,7 @@ resource "aws_route53_record" "record_www" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
-  name              = "/aws/lambda/${var.site_name}"
+  name              = "/aws/lambda/list-of-lists"
   retention_in_days = "7"
 }
 
@@ -276,7 +275,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "lambda" {
-  name               = "${var.site_name}.lambda"
+  name               = "list-of-lists.lambda"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -293,7 +292,7 @@ data "aws_iam_policy_document" "cw" {
 }
 
 resource "aws_iam_policy" "cw" {
-  name   = "${var.site_name}.cw"
+  name   = "list-of-lists.cw"
   policy = data.aws_iam_policy_document.cw.json
 }
 
@@ -309,8 +308,10 @@ resource "aws_iam_role_policy_attachment" "basic_execution_role_attachment" {
 
 data "aws_iam_policy_document" "s3" {
   statement {
-    actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.site.arn}/index.html"]
+    actions = ["s3:PutObject"]
+    # Intentionally broad: grants write access to index.html in any bucket in the account
+    # to support deploying to multiple site buckets without updating this policy per site.
+    resources = ["arn:aws:s3:::*/index.html"]
   }
 
   statement {
@@ -320,7 +321,7 @@ data "aws_iam_policy_document" "s3" {
 }
 
 resource "aws_iam_policy" "s3" {
-  name   = "${var.site_name}.s3"
+  name   = "list-of-lists.s3"
   policy = data.aws_iam_policy_document.s3.json
 }
 
@@ -339,7 +340,7 @@ resource "aws_s3_bucket_notification" "notification" {
 }
 
 resource "aws_lambda_permission" "allow_bucket" {
-  statement_id  = "${var.site_name}-allow-exec-from-s3"
+  statement_id  = "list-of-lists-allow-exec-from-s3"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
   principal     = "s3.amazonaws.com"
@@ -347,7 +348,7 @@ resource "aws_lambda_permission" "allow_bucket" {
 }
 
 resource "aws_lambda_function" "lambda" {
-  function_name = var.site_name
+  function_name = "list-of-lists"
   s3_bucket     = data.aws_s3_bucket.code_bucket.bucket
   s3_key        = "list-of-lists.zip"
   role          = aws_iam_role.lambda.arn
@@ -355,14 +356,13 @@ resource "aws_lambda_function" "lambda" {
   runtime       = "provided.al2023"
   handler       = "ignored"
   publish       = "false"
-  description   = "Generate ${var.site_url}"
+  description   = "Generate list-of-lists sites"
   timeout       = 5
   memory_size   = 128
 
   environment {
     variables = {
-      LOL_SITE     = var.site_name
-      LOL_SITE_URL = var.site_url
+      LOL_GENERATOR_BUCKET = format("list-of-lists-%s-%s-an", data.aws_caller_identity.current.account_id, var.aws_region)
     }
   }
 }
@@ -376,18 +376,18 @@ data "aws_iam_policy_document" "github_update" {
     actions = ["s3:PutObject"]
     resources = [
       "${aws_s3_bucket.generator.arn}/index.template",
-      "${aws_s3_bucket.generator.arn}/${var.site_name}.json"
+      "${aws_s3_bucket.generator.arn}/${var.site_url}.json"
     ]
   }
 }
 
 resource "aws_iam_policy" "github_update" {
-  name   = "${var.site_name}.github-update"
+  name   = "${var.site_url}.github-update"
   policy = data.aws_iam_policy_document.github_update.json
 }
 
 resource "aws_iam_role" "github_update" {
-  name = "${var.site_name}.github-update"
+  name = "${var.site_url}.github-update"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
