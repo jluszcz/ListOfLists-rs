@@ -1,0 +1,264 @@
+terraform {
+  backend "s3" {
+    bucket = "jluszcz-tf-state"
+    # key is provided via -backend-config at init time, e.g.:
+    #   terraform init -backend-config="key=list-of-lists/sites/${LOL_SITE_URL}"
+    # The env-* scripts set TF_CLI_ARGS_init to do this automatically.
+    region = "us-east-2"
+  }
+}
+
+variable "site_url" {}
+
+variable "site_name" {}
+
+variable "github_org" {}
+
+variable "github_repo" {}
+
+variable "aws_region" {
+  type    = string
+  default = "us-east-2"
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+data "aws_s3_bucket" "generator" {
+  bucket = format("list-of-lists-%s-%s-an", data.aws_caller_identity.current.account_id, var.aws_region)
+}
+
+# Site bucket
+
+resource "aws_s3_bucket" "site" {
+  bucket = var.site_url
+}
+
+resource "aws_s3_bucket_public_access_block" "site" {
+  bucket = aws_s3_bucket.site.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_website_configuration" "site" {
+  bucket = aws_s3_bucket.site.id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+
+data "aws_iam_policy_document" "site" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.site.arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+
+      values = [aws_cloudfront_distribution.site.arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "site" {
+  bucket = aws_s3_bucket.site.id
+  policy = data.aws_iam_policy_document.site.json
+}
+
+resource "aws_s3_object" "favicon" {
+  count  = fileexists("../buckets/${var.site_url}/images/favicon.ico") ? 1 : 0
+  bucket = aws_s3_bucket.site.id
+  key    = "images/favicon.ico"
+  source = "../buckets/${var.site_url}/images/favicon.ico"
+  etag   = filemd5("../buckets/${var.site_url}/images/favicon.ico")
+}
+
+# TLS certificate (must be in us-east-1 for CloudFront)
+
+resource "aws_acm_certificate" "cert" {
+  provider                  = aws.us_east_1
+  domain_name               = var.site_url
+  subject_alternative_names = ["www.${var.site_url}"]
+  validation_method         = "DNS"
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+}
+
+# Route53
+
+resource "aws_route53_zone" "zone" {
+  name    = var.site_url
+  comment = "${var.site_url} Hosted Zone"
+}
+
+resource "aws_route53_record" "cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  type            = each.value.type
+  zone_id         = aws_route53_zone.zone.id
+  records         = [each.value.record]
+  ttl             = 60
+}
+
+resource "aws_route53_record" "record" {
+  zone_id         = aws_route53_zone.zone.zone_id
+  name            = var.site_url
+  type            = "A"
+  allow_overwrite = true
+
+  alias {
+    name                   = aws_cloudfront_distribution.site.domain_name
+    zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "record_www" {
+  zone_id         = aws_route53_zone.zone.zone_id
+  name            = "www.${var.site_url}"
+  type            = "A"
+  allow_overwrite = true
+
+  alias {
+    name                   = aws_cloudfront_distribution.site.domain_name
+    zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+# CloudFront
+
+resource "aws_cloudfront_origin_access_control" "site_distribution_oac" {
+  name                              = var.site_name
+  description                       = "OAC for ${var.site_name}"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "site" {
+  origin {
+    domain_name              = aws_s3_bucket.site.bucket_domain_name
+    origin_id                = "site_bucket_origin"
+    origin_access_control_id = aws_cloudfront_origin_access_control.site_distribution_oac.id
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  http_version        = "http2and3"
+  default_root_object = "index.html"
+
+  aliases = ["www.${var.site_url}", var.site_url]
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "site_bucket_origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 3600
+    default_ttl            = 86400
+    max_ttl                = 604800
+    compress               = true
+  }
+
+  price_class = "PriceClass_All"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate.cert.arn
+    minimum_protocol_version = "TLSv1.2_2021"
+    ssl_support_method       = "sni-only"
+  }
+}
+
+# GitHub Actions: upload site JSON
+
+data "aws_iam_policy_document" "github_update" {
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = ["${data.aws_s3_bucket.generator.arn}/${var.site_url}.json"]
+  }
+}
+
+resource "aws_iam_policy" "github_update" {
+  name   = "${var.site_name}.github-update"
+  policy = data.aws_iam_policy_document.github_update.json
+}
+
+resource "aws_iam_role" "github_update" {
+  name = "${var.site_name}.github-update"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Federated = data.aws_iam_openid_connect_provider.github.arn
+        },
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" : "repo:${var.github_org}/${var.github_repo}:*"
+          },
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_update" {
+  role       = aws_iam_role.github_update.name
+  policy_arn = aws_iam_policy.github_update.arn
+}
