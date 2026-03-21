@@ -21,8 +21,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The application uses these environment variables:
 
-- `LOL_SITE` - Site name (e.g., "burgerlist")
-- `LOL_SITE_URL` - Site URL (e.g., "burgerl.ist")
+- `LOL_GENERATOR_BUCKET` - Generator bucket name (used by Lambda; CLI defaults to `generator` for local use)
+- `LOL_SITE_URL` - Site URL (e.g., "burgerl.ist") (CLI only)
 
 ## Architecture
 
@@ -59,7 +59,7 @@ has two main execution modes:
 
 ### S3 Integration
 
-- Generator bucket: `{site_url}-generator` (stores JSON and templates)
+- Generator bucket: account/region-namespaced (e.g., `list-of-lists-{account_id}-{region}-an`) — stores JSON and templates for all sites
 - Site bucket: `{site_url}` (hosts the generated static site)
 - Lambda function triggers on S3 object changes for automatic updates
 

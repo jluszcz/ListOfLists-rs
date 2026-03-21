@@ -19,19 +19,25 @@ async fn main() -> Result<(), lambda_runtime::Error> {
 async fn function(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Error> {
     lambda::init(APP_NAME, module_path!(), false).await?;
 
-    let site_name = env::var(list_of_lists::SITE_NAME_VAR)?;
-    let site_url = env::var(list_of_lists::SITE_URL_VAR)?;
+    let generator_bucket = env::var(list_of_lists::GENERATOR_BUCKET_VAR)?;
 
     let event: S3Event = serde_json::from_value(event.payload)?;
     for record in event.records {
         let bucket = record.s3.bucket.name;
         let key = record.s3.object.key;
-        if let (Some(bucket), Some(key)) = (bucket, key) {
-            info!("Updating {site_name} on update of {bucket}/{key}");
+        if let (Some(bucket), Some(key)) = (bucket, key)
+            && let Some(site_url) = key.strip_suffix(".json")
+        {
+            info!("Updating {site_url} on update of {bucket}/{key}");
+            generator::update_site(
+                site_url.to_string(),
+                generator_bucket.clone(),
+                USE_S3,
+                MINIFY,
+            )
+            .await?;
         }
     }
-
-    generator::update_site(site_name, site_url, USE_S3, MINIFY).await?;
 
     Ok(json!({}))
 }
