@@ -1,4 +1,3 @@
-use anyhow::Context;
 use aws_config::ConfigLoader;
 use aws_lambda_events::s3::S3Event;
 use aws_sdk_s3::Client as S3Client;
@@ -19,18 +18,14 @@ async fn main() -> Result<(), lambda_runtime::Error> {
 }
 
 async fn function(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Error> {
-    lambda::init(APP_NAME, module_path!(), false)
-        .await
-        .context("lambda::init failed")?;
+    lambda::init(APP_NAME, module_path!(), false).await?;
 
-    let generator_bucket =
-        env::var(list_of_lists::GENERATOR_BUCKET_VAR).context("missing LOL_GENERATOR_BUCKET")?;
+    let generator_bucket = env::var(list_of_lists::GENERATOR_BUCKET_VAR)?;
 
     let aws_config = ConfigLoader::default().load().await;
     let s3_client = S3Client::new(&aws_config);
 
-    let event: S3Event =
-        serde_json::from_value(event.payload).context("failed to deserialize S3 event")?;
+    let event: S3Event = serde_json::from_value(event.payload)?;
     for record in event.records {
         let bucket = record.s3.bucket.name;
         let key = record.s3.object.key;
