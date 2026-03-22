@@ -1,4 +1,5 @@
 use anyhow::Result;
+use aws_config::ConfigLoader;
 use clap::{Arg, ArgAction, Command};
 use jluszcz_rust_utils::{Verbosity, set_up_logger};
 use list_of_lists::{APP_NAME, generator};
@@ -86,11 +87,12 @@ async fn main() -> Result<()> {
     set_up_logger(APP_NAME, module_path!(), args.verbosity)?;
     debug!("Args: {args:?}");
 
-    generator::update_site(
-        args.site_url,
-        args.generator_bucket,
-        args.use_s3,
-        args.minify,
-    )
-    .await
+    let s3_client = if args.use_s3 {
+        let aws_config = ConfigLoader::default().load().await;
+        Some(aws_sdk_s3::Client::new(&aws_config))
+    } else {
+        None
+    };
+
+    generator::update_site(args.site_url, args.generator_bucket, s3_client, args.minify).await
 }

@@ -1,6 +1,5 @@
 use crate::{ListOfLists, s3util};
 use anyhow::Result;
-use aws_config::ConfigLoader;
 use html5minify::Minify;
 use log::{debug, trace};
 use minijinja::{Environment, Error, State};
@@ -12,7 +11,7 @@ use std::{
 };
 use tokio::fs;
 
-const SITE_INDEX_TEMPLATE: &str = "index.template";
+pub const SITE_INDEX_TEMPLATE: &str = "index.template";
 const SITE_INDEX: &str = "index.html";
 
 const DIV_ID_SAFE: &str = "div_id_safe";
@@ -30,19 +29,21 @@ enum Io {
 }
 
 impl Io {
-    async fn new(site_url: String, generator_bucket: String, use_s3: bool) -> Self {
-        if use_s3 {
-            let aws_config = ConfigLoader::default().load().await;
-            Self::S3 {
-                s3_client: aws_sdk_s3::Client::new(&aws_config),
+    fn new(
+        site_url: String,
+        generator_bucket: String,
+        s3_client: Option<aws_sdk_s3::Client>,
+    ) -> Self {
+        match s3_client {
+            Some(s3_client) => Self::S3 {
+                s3_client,
                 generator_bucket,
                 site_bucket: site_url,
-            }
-        } else {
-            Self::LocalFile {
+            },
+            None => Self::LocalFile {
                 generator_path: Path::new("buckets").join(generator_bucket),
                 site_path: Path::new("buckets").join(site_url),
-            }
+            },
         }
     }
 
@@ -131,10 +132,10 @@ where
 pub async fn update_site(
     site_url: String,
     generator_bucket: String,
-    use_s3: bool,
+    s3_client: Option<aws_sdk_s3::Client>,
     minify: bool,
 ) -> Result<()> {
-    let io = Io::new(site_url.clone(), generator_bucket, use_s3).await;
+    let io = Io::new(site_url.clone(), generator_bucket, s3_client);
 
     let (template, list_of_lists) =
         tokio::try_join!(read_template(&io), read_list(&io, &site_url),)?;
