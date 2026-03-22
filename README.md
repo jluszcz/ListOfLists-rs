@@ -5,6 +5,7 @@ ListOfLists generates a static website, hosted on AWS in an S3 bucket, from a JS
 ## Status
 
 [![Status Badge](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml)
+[![.github/workflows/update-index-template.yml](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/update-index-template.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/update-index-template.yml)
 
 ## List JSON
 
@@ -78,7 +79,8 @@ treated as a [Bootstrap Icon](https://icons.getbootstrap.com) name. When both `f
 
 ## Local Development
 
-Files are read from `buckets/{generator_bucket}/` when running locally (default: `buckets/generator/`). The directory must contain:
+Files are read from `buckets/{generator_bucket}/` when running locally (default: `buckets/generator/`). The directory
+must contain:
 
 - `index.template` — Minijinja HTML template
 - `{site_url}.json` — List data file
@@ -91,13 +93,13 @@ cargo run --bin main -- --site-url <site_url>
 
 ### CLI Flags
 
-| Flag                      | Env Var                | Default       | Description                                |
-|---------------------------|------------------------|---------------|--------------------------------------------|
-| `-u`, `--site-url`        | `LOL_SITE_URL`         | required      | Site URL (e.g. `burgerl.ist`)              |
-| `-g`, `--generator-bucket`| `LOL_GENERATOR_BUCKET` | `generator`   | Generator bucket name                      |
-| `-r`, `--remote`          |                        |               | Use S3 instead of local files              |
-| `-m`, `--minify`          |                        |               | Minify the generated HTML                  |
-| `-v` / `-vv`              |                        |               | Enable DEBUG / TRACE logging               |
+| Flag                       | Env Var                | Default     | Description                   |
+|----------------------------|------------------------|-------------|-------------------------------|
+| `-u`, `--site-url`         | `LOL_SITE_URL`         | required    | Site URL (e.g. `burgerl.ist`) |
+| `-g`, `--generator-bucket` | `LOL_GENERATOR_BUCKET` | `generator` | Generator bucket name         |
+| `-r`, `--remote`           |                        |             | Use S3 instead of local files |
+| `-m`, `--minify`           |                        |             | Minify the generated HTML     |
+| `-v` / `-vv`               |                        |             | Enable DEBUG / TRACE logging  |
 
 ## Deploying to AWS
 
