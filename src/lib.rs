@@ -129,6 +129,37 @@ pub mod s3util {
         Ok(())
     }
 
+    pub async fn list_keys(
+        s3_client: &aws_sdk_s3::Client,
+        bucket_name: &str,
+        suffix: &str,
+    ) -> Result<Vec<String>> {
+        debug!("Listing '{suffix}' keys in {bucket_name}");
+        let mut keys = Vec::new();
+        let mut continuation_token = None;
+        loop {
+            let mut req = s3_client.list_objects_v2().bucket(bucket_name);
+            if let Some(token) = continuation_token {
+                req = req.continuation_token(token);
+            }
+            let response = req.send().await?;
+            for obj in response.contents() {
+                if let Some(key) = obj.key()
+                    && key.ends_with(suffix)
+                {
+                    keys.push(key.to_string());
+                }
+            }
+            if response.is_truncated().unwrap_or_default() {
+                continuation_token = response.next_continuation_token().map(String::from);
+            } else {
+                break;
+            }
+        }
+        debug!("Listed {} '{suffix}' keys in {bucket_name}", keys.len());
+        Ok(keys)
+    }
+
     pub async fn exists(
         s3_client: &aws_sdk_s3::Client,
         bucket_name: &str,
