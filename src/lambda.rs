@@ -35,6 +35,7 @@ async fn function(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Er
                 let site_keys = s3util::list_keys(&s3_client, &generator_bucket, ".json").await?;
                 for site_key in site_keys {
                     if let Some(site_url) = site_key.strip_suffix(".json") {
+                        info!("Updating {site_url}");
                         generator::update_site(
                             site_url.to_string(),
                             generator_bucket.clone(),
