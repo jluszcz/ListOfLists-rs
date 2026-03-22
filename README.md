@@ -4,7 +4,8 @@ ListOfLists generates a static website, hosted on AWS in an S3 bucket, from a JS
 
 ## Status
 
-[![Status Badge](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml)
+[![.github/workflows/build-and-deploy.yml](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/build-and-deploy.yml)
+
 [![.github/workflows/update-index-template.yml](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/update-index-template.yml/badge.svg)](https://github.com/jluszcz/ListOfLists-rs/actions/workflows/update-index-template.yml)
 
 ## List JSON
