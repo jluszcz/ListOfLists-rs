@@ -1,13 +1,15 @@
-name: Dependabot Auto-Merge
+name: Auto-Merge
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
 
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    if: >
+      github.event.pull_request.user.login == 'dependabot[bot]' ||
+      (github.event.pull_request.user.login == 'jluszcz' && github.event.pull_request.head.ref == 'Deps')
 
     permissions:
       contents: write
