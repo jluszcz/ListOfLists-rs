@@ -1715,7 +1715,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "jluszcz_rust_utils"
 version = "0.1.0"
-source = "git+https://github.com//jluszcz/rust-utils#0b52edda5c26e2707d70770cf24da8cdba6c4b9b"
+source = "git+https://github.com//jluszcz/rust-utils#26a50f10a6a9ea9a5da3c44c67a416fa204c09ca"
 dependencies = [
  "anyhow",
  "aws-config",
@@ -1976,9 +1976,9 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
 name = "num-conv"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf97ec579c3c42f953ef76dbf8d55ac91fb219dde70e49aa4a6b7d74e9919050"
+checksum = "c6673768db2d862beb9b39a78fdcb1a69439615d5794a1be50caa9bc92c81967"
 
 [[package]]
 name = "num-integer"
