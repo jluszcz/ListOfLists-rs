@@ -1,7 +1,7 @@
 use crate::{ListOfLists, s3util};
 use anyhow::Result;
-use html5minify::Minify;
 use log::{debug, trace};
+use minify_html::Cfg;
 use minijinja::{Environment, Error, State};
 use regex::Regex;
 use std::sync::LazyLock;
@@ -154,7 +154,7 @@ pub async fn update_site(
         let original_size = site.len();
         debug!("Minifying {SITE_INDEX} (original size: {original_size})",);
 
-        let site = site.minify()?;
+        let site = minify_html::minify(site.as_bytes(), &Cfg::new());
 
         debug!(
             "Minified {SITE_INDEX}: {:.1}% (new size: {})",
