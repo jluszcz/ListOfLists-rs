@@ -82,7 +82,7 @@ jobs:
 
       - name: Configure AWS Credentials
         if: github.event_name == 'push'
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
+        uses: aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT }}.github-deploy
           role-session-name: github-deploy
