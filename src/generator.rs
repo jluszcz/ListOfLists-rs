@@ -154,7 +154,11 @@ pub async fn update_site(
         let original_size = site.len();
         debug!("Minifying {SITE_INDEX} (original size: {original_size})",);
 
-        let site = minify_html::minify(site.as_bytes(), &Cfg::new());
+        let mut cfg = Cfg::new();
+        cfg.minify_css = true;
+        cfg.minify_js = true;
+
+        let site = minify_html::minify(site.as_bytes(), &cfg);
 
         debug!(
             "Minified {SITE_INDEX}: {:.1}% (new size: {})",
