@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - main
-    paths: &paths
+
+    paths:
       - '.github/workflows/build-and-deploy.yml'
       - 'Cargo**'
       - 'src/**/*.rs'
@@ -12,7 +13,6 @@ on:
   pull_request:
     branches:
       - main
-    paths: *paths
 
 env:
   PROJECT: list-of-lists
