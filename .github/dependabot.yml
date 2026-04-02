@@ -6,5 +6,9 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
     assignees:
       - "jluszcz"
