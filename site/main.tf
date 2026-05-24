@@ -88,11 +88,13 @@ resource "aws_s3_bucket_policy" "site" {
 }
 
 resource "aws_s3_object" "favicon" {
-  count  = fileexists("../buckets/${var.site_url}/images/favicon.ico") ? 1 : 0
-  bucket = aws_s3_bucket.site.id
-  key    = "images/favicon.ico"
-  source = "../buckets/${var.site_url}/images/favicon.ico"
-  etag   = filemd5("../buckets/${var.site_url}/images/favicon.ico")
+  count         = fileexists("../buckets/${var.site_url}/images/favicon.ico") ? 1 : 0
+  bucket        = aws_s3_bucket.site.id
+  key           = "images/favicon.ico"
+  source        = "../buckets/${var.site_url}/images/favicon.ico"
+  etag          = filemd5("../buckets/${var.site_url}/images/favicon.ico")
+  content_type  = "image/x-icon"
+  cache_control = "public, max-age=31536000, immutable"
 }
 
 # TLS certificate (must be in us-east-1 for CloudFront)
