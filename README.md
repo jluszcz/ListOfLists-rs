@@ -104,21 +104,48 @@ cargo run --bin main -- --site-url <site_url>
 
 ## Deploying to AWS
 
-### Helper Script
+The Terraform configuration is split into two parts, each with its own backend state:
+
+- `shared/` — account-wide resources (generator bucket, Lambda, shared IAM roles). Apply once per AWS account.
+- `site/` — per-site resources (site bucket, CloudFront, Route53, ACM, GitHub OIDC role). Apply once per site.
+
+### Shared Infrastructure
+
+Apply from `shared/` (state key is fixed at `list-of-lists/shared`):
+
+```sh
+cd shared
+terraform init
+terraform apply
+```
+
+### Per-Site Infrastructure
+
+Each site needs its own Terraform state, keyed off the site URL. The repo includes `env-*` helper scripts (e.g.
+`env-movielist`) that export the required variables and run `terraform init` with the correct backend key:
 
 ```sh
 #!/usr/bin/env sh
 
 export LOL_SITE_URL="list-of-l.ist"
+export LOL_SITE_NAME=$(echo ${LOL_SITE_URL} | tr -d '.')
 
 export TF_VAR_site_url=${LOL_SITE_URL}
+export TF_VAR_site_name=${LOL_SITE_NAME}
+export TF_VAR_github_org="jluszcz"
+export TF_VAR_github_repo="ListOfL.ist"
+
+export TF_CLI_ARGS_init="-backend-config=key=list-of-lists/sites/${LOL_SITE_URL} -reconfigure"
+terraform init
 ```
 
-### Update AWS Configuration
+Then from `site/`:
 
-1. `source env-helper`
-1. _Build_
-1. `terraform apply`
+```sh
+cd site
+source ../env-<site>
+terraform apply
+```
 
 ### Update List
 

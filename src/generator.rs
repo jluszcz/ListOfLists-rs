@@ -15,6 +15,7 @@ pub const SITE_INDEX_TEMPLATE: &str = "index.template";
 const SITE_INDEX: &str = "index.html";
 
 const DIV_ID_SAFE: &str = "div_id_safe";
+const OPTIMIZE_IMPORT: &str = "optimize_import";
 
 enum Io {
     S3 {
@@ -129,6 +130,51 @@ where
         .into_owned()
 }
 
+fn optimize_import(_: &State, value: String) -> Result<String, Error> {
+    Ok(inner_optimize_import(value))
+}
+
+fn inner_optimize_import<S>(value: S) -> String
+where
+    S: Into<String>,
+{
+    static SCRIPT_TAG: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r#"(?i)<script\b([^>]*)>"#).unwrap());
+    // Match defer/async only as attribute names — preceded by start-of-attrs or
+    // whitespace, followed by whitespace, '=', '/', or end-of-attrs — so values
+    // like src="https://example.com/defer.js" don't trip this.
+    static DEFER_OR_ASYNC_ATTR: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(?i)(?:^|\s)(?:defer|async)(?:\s|=|/|$)").unwrap());
+    static LINK_TAG: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r#"(?i)<link\b([^>]*)>"#).unwrap());
+    static REL_STYLESHEET: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r#"(?i)\brel\s*=\s*["']?stylesheet["']?"#).unwrap());
+
+    let value = SCRIPT_TAG
+        .replace_all(&value.into(), |caps: &regex::Captures| {
+            let attrs = &caps[1];
+            if DEFER_OR_ASYNC_ATTR.is_match(attrs) {
+                caps[0].to_string()
+            } else {
+                format!("<script defer{attrs}>")
+            }
+        })
+        .into_owned();
+
+    LINK_TAG
+        .replace_all(&value, |caps: &regex::Captures| {
+            let attrs = &caps[1];
+            if !REL_STYLESHEET.is_match(attrs) {
+                return caps[0].to_string();
+            }
+            let preload_attrs = REL_STYLESHEET.replace(attrs, r#"rel="preload" as="style""#);
+            format!(
+                r#"<link{preload_attrs} onload="this.onload=null;this.rel='stylesheet'"><noscript><link{attrs}></noscript>"#
+            )
+        })
+        .into_owned()
+}
+
 pub async fn update_site(
     site_url: String,
     generator_bucket: String,
@@ -143,6 +189,7 @@ pub async fn update_site(
     let mut env = Environment::new();
     env.add_template(SITE_INDEX, &template)?;
     env.add_filter(DIV_ID_SAFE, div_id_safe);
+    env.add_filter(OPTIMIZE_IMPORT, optimize_import);
 
     let template = env.get_template(SITE_INDEX)?;
 
@@ -185,5 +232,69 @@ mod test {
         assert_eq!("foo_1234", inner_div_id_safe("foo 1234"));
         assert_eq!("Foo_1234", inner_div_id_safe("Foo 1234"));
         assert_eq!("1234", inner_div_id_safe("1234"));
+    }
+
+    #[test]
+    fn test_optimize_import_adds_defer() {
+        assert_eq!(
+            r#"<script defer src="https://example.com/a.js"></script>"#,
+            inner_optimize_import(r#"<script src="https://example.com/a.js"></script>"#),
+        );
+    }
+
+    #[test]
+    fn test_optimize_import_preserves_existing_defer() {
+        let input = r#"<script src="https://example.com/a.js" defer></script>"#;
+        assert_eq!(input, inner_optimize_import(input));
+    }
+
+    #[test]
+    fn test_optimize_import_skips_async() {
+        let input = r#"<script src="https://example.com/a.js" async></script>"#;
+        assert_eq!(input, inner_optimize_import(input));
+    }
+
+    #[test]
+    fn test_optimize_import_ignores_defer_in_attribute_value() {
+        // 'defer' appears inside an attribute value, not as an attribute name.
+        let input = r#"<script src="https://example.com/defer.js"></script>"#;
+        let expected = r#"<script defer src="https://example.com/defer.js"></script>"#;
+        assert_eq!(expected, inner_optimize_import(input));
+    }
+
+    #[test]
+    fn test_optimize_import_handles_multiple_scripts() {
+        let input = concat!(
+            r#"<script src="https://example.com/a.js"></script>"#,
+            r#"<script src="https://example.com/b.js" defer></script>"#,
+        );
+        let expected = concat!(
+            r#"<script defer src="https://example.com/a.js"></script>"#,
+            r#"<script src="https://example.com/b.js" defer></script>"#,
+        );
+        assert_eq!(expected, inner_optimize_import(input));
+    }
+
+    #[test]
+    fn test_optimize_import_handles_multi_line_script() {
+        let input = "<script\n    src=\"https://example.com/a.js\"\n    integrity=\"sha384-abc\"\n    crossorigin=\"anonymous\"></script>";
+        let expected = "<script defer\n    src=\"https://example.com/a.js\"\n    integrity=\"sha384-abc\"\n    crossorigin=\"anonymous\"></script>";
+        assert_eq!(expected, inner_optimize_import(input));
+    }
+
+    #[test]
+    fn test_optimize_import_rewrites_stylesheet_link() {
+        let input = r#"<link rel="stylesheet" href="https://example.com/a.css" integrity="sha384-abc" crossorigin="anonymous">"#;
+        let expected = concat!(
+            r#"<link rel="preload" as="style" href="https://example.com/a.css" integrity="sha384-abc" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">"#,
+            r#"<noscript><link rel="stylesheet" href="https://example.com/a.css" integrity="sha384-abc" crossorigin="anonymous"></noscript>"#,
+        );
+        assert_eq!(expected, inner_optimize_import(input));
+    }
+
+    #[test]
+    fn test_optimize_import_leaves_non_stylesheet_link_unchanged() {
+        let input = r#"<link rel="icon" href="favicon.ico">"#;
+        assert_eq!(input, inner_optimize_import(input));
     }
 }
