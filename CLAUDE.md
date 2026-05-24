@@ -45,6 +45,14 @@ has two main execution modes:
 - HTML minification support for production deployments
 - Custom Jinja filter `div_id_safe` for generating CSS-safe div IDs
 
+**Template (`index.template`)**
+
+- Minijinja template that renders the full HTML page for a site
+- Receives `title`, `lists`, and optional `footer`/`footer_links` variables from the generator
+- Iterates over non-hidden lists to build Bootstrap tab navigation and list content
+- Supports two item types: plain strings and tooltip objects (`{ item, tooltip }`)
+- When running locally (sourcing an `env-*` file), the generated `index.html` is written to `buckets/{site_url}/index.html` (e.g., `buckets/starl.ist/index.html`, `buckets/moviel.ist/index.html`)
+
 **Executables**
 
 - `main.rs` - CLI tool for local development and manual site generation
