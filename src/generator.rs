@@ -1,5 +1,5 @@
 use crate::{ListOfLists, s3util};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use log::{debug, trace};
 use minify_html::Cfg;
 use minijinja::{Environment, Error, State};
@@ -17,7 +17,7 @@ const SITE_INDEX: &str = "index.html";
 const DIV_ID_SAFE: &str = "div_id_safe";
 const OPTIMIZE_IMPORT: &str = "optimize_import";
 
-enum Io {
+pub enum Io {
     S3 {
         s3_client: aws_sdk_s3::Client,
         generator_bucket: String,
@@ -30,7 +30,7 @@ enum Io {
 }
 
 impl Io {
-    fn new(
+    pub fn new(
         site_url: String,
         generator_bucket: String,
         s3_client: Option<aws_sdk_s3::Client>,
@@ -56,64 +56,75 @@ impl Io {
                 ..
             } => {
                 let bytes = s3util::get(s3_client, generator_bucket, target).await?;
-                Ok(str::from_utf8(&bytes)?.into())
+                let s = str::from_utf8(&bytes)
+                    .with_context(|| format!("{target} from {generator_bucket} is not UTF-8"))?;
+                Ok(s.into())
             }
 
             Io::LocalFile { generator_path, .. } => {
                 let path = generator_path.join(target);
                 debug!("Reading {path:?}");
-                let res = fs::read_to_string(&path).await;
-                debug!(
-                    "{} {path:?}",
-                    if res.is_ok() {
-                        "Read"
-                    } else {
-                        "Failed to read"
-                    }
-                );
-                Ok(res?)
+                fs::read_to_string(&path)
+                    .await
+                    .with_context(|| format!("read {path:?}"))
             }
         }
     }
 
-    async fn write(&self, target: &str, content: &[u8]) -> Result<()> {
+    async fn write(&self, target: &str, content: Vec<u8>) -> Result<()> {
         match self {
             Io::S3 {
                 s3_client,
                 site_bucket,
                 ..
-            } => s3util::put(s3_client, site_bucket, target, "text/html", content).await?,
+            } => s3util::put(s3_client, site_bucket, target, "text/html", content).await,
 
             Io::LocalFile { site_path, .. } => {
                 let path = site_path.join(target);
                 debug!("Writing to {path:?}");
-                let res = fs::write(&path, content).await;
-                debug!(
-                    "{} {path:?}",
-                    if res.is_ok() {
-                        "Wrote"
-                    } else {
-                        "Failed to write"
-                    }
-                );
-                res?
+                fs::write(&path, content)
+                    .await
+                    .with_context(|| format!("write {path:?}"))
             }
         }
-
-        Ok(())
     }
 }
 
-async fn read_template(io: &Io) -> Result<String> {
-    io.read(SITE_INDEX_TEMPLATE).await
+pub async fn read_template(
+    generator_bucket: &str,
+    s3_client: Option<&aws_sdk_s3::Client>,
+) -> Result<String> {
+    match s3_client {
+        Some(client) => {
+            let bytes = s3util::get(client, generator_bucket, SITE_INDEX_TEMPLATE)
+                .await
+                .with_context(|| format!("read {SITE_INDEX_TEMPLATE}"))?;
+            let s = str::from_utf8(&bytes)
+                .with_context(|| format!("{SITE_INDEX_TEMPLATE} is not UTF-8"))?;
+            Ok(s.to_string())
+        }
+        None => {
+            let path = Path::new("buckets")
+                .join(generator_bucket)
+                .join(SITE_INDEX_TEMPLATE);
+            debug!("Reading {path:?}");
+            fs::read_to_string(&path)
+                .await
+                .with_context(|| format!("read {path:?}"))
+        }
+    }
 }
 
 async fn read_list(io: &Io, site_url: &str) -> Result<ListOfLists> {
-    let content = io.read(&format!("{site_url}.json")).await?;
-    let list_of_lists: ListOfLists = serde_json::from_str(content.as_str())?;
+    let key = format!("{site_url}.json");
+    let content = io.read(&key).await.with_context(|| format!("read {key}"))?;
+    let list_of_lists: ListOfLists = serde_json::from_str(content.as_str())
+        .with_context(|| format!("parse {key} as ListOfLists"))?;
     trace!("{list_of_lists:?}");
 
-    list_of_lists.validate()
+    list_of_lists
+        .validate()
+        .with_context(|| format!("validate {key}"))
 }
 
 fn div_id_safe(_: &State, value: String) -> Result<String, Error> {
@@ -124,7 +135,7 @@ fn inner_div_id_safe<S>(value: S) -> String
 where
     S: Into<String>,
 {
-    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new("[^[_0-9A-Za-z]]").unwrap());
+    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new("[^_0-9A-Za-z]").unwrap());
 
     RE.replace_all(&value.into().replace(' ', "_"), "")
         .into_owned()
@@ -175,31 +186,36 @@ where
         .into_owned()
 }
 
-pub async fn update_site(
-    site_url: String,
-    generator_bucket: String,
-    s3_client: Option<aws_sdk_s3::Client>,
-    minify: bool,
-) -> Result<()> {
-    let io = Io::new(site_url.clone(), generator_bucket, s3_client);
-
-    let (template, list_of_lists) =
-        tokio::try_join!(read_template(&io), read_list(&io, &site_url),)?;
-
+pub fn build_environment(template: &str) -> Result<Environment<'_>> {
     let mut env = Environment::new();
-    env.add_template(SITE_INDEX, &template)?;
+    env.add_template(SITE_INDEX, template)
+        .context("compile index template")?;
     env.add_filter(DIV_ID_SAFE, div_id_safe);
     env.add_filter(OPTIMIZE_IMPORT, optimize_import);
+    Ok(env)
+}
 
-    let template = env.get_template(SITE_INDEX)?;
+pub async fn render_site(
+    io: &Io,
+    env: &Environment<'_>,
+    site_url: &str,
+    minify: bool,
+) -> Result<()> {
+    let list_of_lists = read_list(io, site_url).await?;
 
-    debug!("Rendering {SITE_INDEX}");
-    let site = template.render(&list_of_lists)?;
-    debug!("Rendered {SITE_INDEX}");
+    let template = env
+        .get_template(SITE_INDEX)
+        .context("get compiled index template")?;
+
+    debug!("Rendering {SITE_INDEX} for {site_url}");
+    let site = template
+        .render(&list_of_lists)
+        .with_context(|| format!("render {SITE_INDEX} for {site_url}"))?;
+    debug!("Rendered {SITE_INDEX} for {site_url}");
 
     let site = if minify {
         let original_size = site.len();
-        debug!("Minifying {SITE_INDEX} (original size: {original_size})",);
+        debug!("Minifying {SITE_INDEX} for {site_url} (original size: {original_size})");
 
         let mut cfg = Cfg::new();
         cfg.minify_css = true;
@@ -208,7 +224,7 @@ pub async fn update_site(
         let site = minify_html::minify(site.as_bytes(), &cfg);
 
         debug!(
-            "Minified {SITE_INDEX}: {:.1}% (new size: {})",
+            "Minified {SITE_INDEX} for {site_url}: {:.1}% (new size: {})",
             100.0 * (site.len() as f64 / original_size as f64),
             site.len()
         );
@@ -218,7 +234,21 @@ pub async fn update_site(
         site.as_bytes().to_vec()
     };
 
-    io.write(SITE_INDEX, &site).await
+    io.write(SITE_INDEX, site)
+        .await
+        .with_context(|| format!("write {SITE_INDEX} for {site_url}"))
+}
+
+pub async fn update_site(
+    site_url: String,
+    generator_bucket: String,
+    s3_client: Option<aws_sdk_s3::Client>,
+    minify: bool,
+) -> Result<()> {
+    let template = read_template(&generator_bucket, s3_client.as_ref()).await?;
+    let env = build_environment(&template)?;
+    let io = Io::new(site_url.clone(), generator_bucket, s3_client);
+    render_site(&io, &env, &site_url, minify).await
 }
 
 #[cfg(test)]

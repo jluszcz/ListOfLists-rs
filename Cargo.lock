@@ -239,6 +239,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-cloudfront"
+version = "1.118.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af73cdd78731ac23584e6e09817d9663c38980c9129518ac8c380d4f62affd05"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-observability",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-smithy-xml",
+ "aws-types",
+ "fastrand",
+ "http 0.2.12",
+ "http 1.4.0",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-cloudwatch"
 version = "1.111.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2203,10 +2227,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aws-config",
+ "aws-sdk-cloudfront",
  "aws-sdk-s3",
  "aws_lambda_events",
  "bytes",
  "clap",
+ "futures",
  "jluszcz_rust_utils",
  "lambda_runtime",
  "log",
@@ -2828,16 +2854,6 @@ dependencies = [
  "serde",
  "serde_json",
  "vlq",
-]
-
-[[package]]
-name = "parking_lot"
-version = "0.12.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
-dependencies = [
- "lock_api",
- "parking_lot_core",
 ]
 
 [[package]]
@@ -3913,7 +3929,6 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.6.3",

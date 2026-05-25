@@ -22,7 +22,15 @@ pub struct ListOfLists {
 }
 
 impl ListOfLists {
+    // Rejects empty-after-trim strings; non-empty values keep their whitespace
+    // verbatim so the renderer surfaces formatting issues rather than masking them.
     pub fn validate(self) -> Result<Self> {
+        if self.title.trim().is_empty() {
+            return Err(anyhow!("ListOfLists title must not be empty"));
+        }
+        if self.lists.is_empty() {
+            return Err(anyhow!("ListOfLists must contain at least one list"));
+        }
         for l in &self.lists {
             l.validate()?;
         }
@@ -46,11 +54,17 @@ pub struct List {
 
 impl List {
     fn validate(&self) -> Result<()> {
-        if !self.duplicates && self.list.iter().collect::<HashSet<_>>().len() != self.list.len() {
-            Err(anyhow!("Illegal duplicates found in {:?}", self.list))
-        } else {
-            Ok(())
+        if self.title.trim().is_empty() {
+            return Err(anyhow!("List title must not be empty"));
         }
+        for item in &self.list {
+            item.validate()
+                .map_err(|e| anyhow!("{} in list {:?}", e, self.title))?;
+        }
+        if !self.duplicates && self.list.iter().collect::<HashSet<_>>().len() != self.list.len() {
+            return Err(anyhow!("Illegal duplicates found in {:?}", self.list));
+        }
+        Ok(())
     }
 }
 
@@ -59,6 +73,27 @@ impl List {
 pub enum ListItem {
     Item(String),
     WithTooltip { item: String, tooltip: String },
+}
+
+impl ListItem {
+    fn validate(&self) -> Result<()> {
+        match self {
+            ListItem::Item(s) => {
+                if s.trim().is_empty() {
+                    return Err(anyhow!("List item must not be empty"));
+                }
+            }
+            ListItem::WithTooltip { item, tooltip } => {
+                if item.trim().is_empty() {
+                    return Err(anyhow!("List item must not be empty"));
+                }
+                if tooltip.trim().is_empty() {
+                    return Err(anyhow!("Tooltip must not be empty for item {:?}", item));
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -83,6 +118,7 @@ pub struct FooterItem {
 
 pub mod s3util {
     use super::*;
+    use anyhow::Context;
     use aws_sdk_s3::primitives::ByteStream;
     use bytes::Bytes;
     use log::debug;
@@ -98,10 +134,12 @@ pub mod s3util {
             .bucket(bucket_name)
             .key(object_name)
             .send()
-            .await?
+            .await
+            .with_context(|| format!("get_object {bucket_name}/{object_name}"))?
             .body
             .collect()
-            .await?
+            .await
+            .with_context(|| format!("read body of {bucket_name}/{object_name}"))?
             .into_bytes();
         debug!("Read {bucket_name}:{object_name} from S3");
 
@@ -113,7 +151,7 @@ pub mod s3util {
         bucket_name: &str,
         object_name: &str,
         content_type: &str,
-        data: &[u8],
+        data: Vec<u8>,
     ) -> Result<()> {
         debug!("Uploading {bucket_name}:{object_name} to S3");
         s3_client
@@ -121,9 +159,10 @@ pub mod s3util {
             .bucket(bucket_name)
             .key(object_name)
             .content_type(content_type)
-            .body(ByteStream::from(Bytes::from(Vec::from(data))))
+            .body(ByteStream::from(Bytes::from(data)))
             .send()
-            .await?;
+            .await
+            .with_context(|| format!("put_object {bucket_name}/{object_name}"))?;
         debug!("Uploaded {bucket_name}:{object_name} to S3");
 
         Ok(())
@@ -142,7 +181,10 @@ pub mod s3util {
             if let Some(token) = continuation_token {
                 req = req.continuation_token(token);
             }
-            let response = req.send().await?;
+            let response = req
+                .send()
+                .await
+                .with_context(|| format!("list_objects_v2 {bucket_name}"))?;
             for obj in response.contents() {
                 if let Some(key) = obj.key()
                     && key.ends_with(suffix)
@@ -158,23 +200,6 @@ pub mod s3util {
         }
         debug!("Listed {} '{suffix}' keys in {bucket_name}", keys.len());
         Ok(keys)
-    }
-
-    pub async fn exists(
-        s3_client: &aws_sdk_s3::Client,
-        bucket_name: &str,
-        object_name: &str,
-    ) -> Result<bool> {
-        debug!("Checking {bucket_name}:{object_name} on S3");
-        let response = s3_client
-            .head_object()
-            .bucket(bucket_name)
-            .key(object_name)
-            .send()
-            .await;
-        debug!("Checked {bucket_name}:{object_name} on S3");
-
-        Ok(response.is_ok())
     }
 }
 
@@ -285,6 +310,62 @@ mod test {
     fn test_list_validation_duplicates_disallowed() {
         let l = List::new("Letters", false, false, &["A", "A"]);
 
+        assert!(l.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_empty_top_level_title() {
+        let lol = ListOfLists {
+            title: "  ".to_string(),
+            footer_links: vec![],
+            footer: None,
+            lists: vec![List::new("Letters", false, false, &["A"])],
+        };
+        assert!(lol.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_empty_lists_vec() {
+        let lol = ListOfLists {
+            title: "The List".to_string(),
+            footer_links: vec![],
+            footer: None,
+            lists: vec![],
+        };
+        assert!(lol.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_empty_list_title() {
+        let l = List::new("", false, false, &["A"]);
+        assert!(l.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_empty_item() {
+        let l = List::new("Letters", false, false, &["A", ""]);
+        assert!(l.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_empty_tooltip() {
+        let l = List::from_items(
+            "Tooltip",
+            false,
+            false,
+            vec![ListItem::with_tooltip("foo", "")],
+        );
+        assert!(l.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_empty_tooltip_item() {
+        let l = List::from_items(
+            "Tooltip",
+            false,
+            false,
+            vec![ListItem::with_tooltip("", "baz")],
+        );
         assert!(l.validate().is_err());
     }
 
