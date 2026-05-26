@@ -68,6 +68,15 @@ ListOfLists generates a static website, hosted on AWS in an S3 bucket, from a JS
 | `duplicates` | bool   | `false`  | If `false`, duplicate items cause a validation error      |
 | `list`       | array  | required | Array of items (strings or objects with `item`/`tooltip`) |
 
+### Validation
+
+The generator rejects input that would produce a degenerate page:
+
+- The top-level `title` must be non-empty.
+- `lists` must contain at least one list.
+- Each list `title`, each item string, and each tooltip must be non-empty.
+- Duplicate items within a list are rejected unless `duplicates: true`.
+
 ### Footers
 
 The `footer` object supports `imports` and `links`. Use `imports` to inject `<script>` or `<link>` tags (e.g. for icon
@@ -151,7 +160,26 @@ terraform apply
 
 1. Upload `${LOL_SITE_URL}.json` to `s3://<generator_bucket>/${LOL_SITE_URL}.json`
 
-The Lambda function triggers automatically on S3 object changes to regenerate the site.
+The Lambda function triggers automatically on S3 object changes:
+
+- A change to `${site_url}.json` regenerates that single site.
+- A change to `index.template` regenerates every site found in the generator bucket. Sites are rendered concurrently
+  using a shared parsed template.
+
+After each render, the Lambda issues a CloudFront invalidation for `/index.html` on the distribution whose aliases
+include the site URL. Distribution lookups are cached for the lifetime of the warm container. Invalidation failures are
+logged but do not fail the Lambda; the new `index.html` is already in S3 and will be served once the existing cache
+entry expires.
+
+### Lambda IAM
+
+The Lambda role (defined in `shared/main.tf`) requires:
+
+- `s3:GetObject` and `s3:ListBucket` on the generator bucket.
+- `s3:PutObject` on `arn:aws:s3:::*/index.html` (broad by design — see comment in `shared/main.tf`).
+- `cloudfront:ListDistributions` and `cloudfront:CreateInvalidation` (resource `*`) for the post-render invalidation.
+
+Re-apply `shared/` Terraform when upgrading from a version without CloudFront permissions.
 
 See [moviel.ist](https://github.com/jluszcz/MovieList) or [burgerl.ist](https://github.com/jluszcz/BurgerList) for
 examples of how to automate uploads with [GitHub Actions](https://github.com/features/actions).

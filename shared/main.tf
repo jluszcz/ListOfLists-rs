@@ -162,6 +162,28 @@ resource "aws_iam_role_policy_attachment" "s3" {
   policy_arn = aws_iam_policy.s3.arn
 }
 
+data "aws_iam_policy_document" "cloudfront" {
+  statement {
+    actions   = ["cloudfront:ListDistributions"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions   = ["cloudfront:CreateInvalidation"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "cloudfront" {
+  name   = "list-of-lists.cloudfront"
+  policy = data.aws_iam_policy_document.cloudfront.json
+}
+
+resource "aws_iam_role_policy_attachment" "cloudfront" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = aws_iam_policy.cloudfront.arn
+}
+
 resource "aws_s3_bucket_notification" "notification" {
   bucket = aws_s3_bucket.generator.id
 
@@ -189,7 +211,7 @@ resource "aws_lambda_function" "lambda" {
   handler       = "ignored"
   publish       = false
   description   = "Generate list-of-lists sites"
-  timeout       = 5
+  timeout       = 30
   memory_size   = 128
 
   lifecycle {
