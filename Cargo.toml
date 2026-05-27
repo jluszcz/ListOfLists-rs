@@ -13,11 +13,11 @@ aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
 aws_lambda_events = "1"
 bytes = "1"
 clap = { version = "4", features = ["env"] }
-futures = "0.3"
-minify-html = "0.18"
+futures = "0"
+minify-html = "0"
 jluszcz_rust_utils = { git = "https://github.com//jluszcz/rust-utils" }
 lambda_runtime = "1"
-log = "0.4"
+log = "0"
 minijinja = "2"
 regex = "1"
 serde = "1"
