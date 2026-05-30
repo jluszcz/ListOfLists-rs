@@ -105,7 +105,7 @@ cargo run --bin main -- --site-url <site_url>
 
 | Flag                       | Env Var                | Default     | Description                   |
 |----------------------------|------------------------|-------------|-------------------------------|
-| `-u`, `--site-url`         | `LOL_SITE_URL`         | required    | Site URL (e.g. `burgerl.ist`) |
+| `-u`, `--site-url`         | `LOL_SITE_URL`         | required    | Site URL (e.g. `list-of-l.ist`) |
 | `-g`, `--generator-bucket` | `LOL_GENERATOR_BUCKET` | `generator` | Generator bucket name         |
 | `-r`, `--remote`           |                        |             | Use S3 instead of local files |
 | `-m`, `--minify`           |                        |             | Minify the generated HTML     |
@@ -130,31 +130,27 @@ terraform apply
 
 ### Per-Site Infrastructure
 
-Each site needs its own Terraform state, keyed off the site URL. The repo includes `env-*` helper scripts (e.g.
-`env-movielist`) that export the required variables and run `terraform init` with the correct backend key:
+Each site needs its own Terraform state, keyed off the site URL. Site identities are kept **out of the repo**: the
+reusable resources live in `site-module/`, and each site is a small, gitignored root module under `sites/<site_url>/`
+that calls it. Scaffold one with the helper script (no repo changes needed to add a site):
 
 ```sh
-#!/usr/bin/env sh
-
-export LOL_SITE_URL="list-of-l.ist"
-export LOL_SITE_NAME=$(echo ${LOL_SITE_URL} | tr -d '.')
-
-export TF_VAR_site_url=${LOL_SITE_URL}
-export TF_VAR_site_name=${LOL_SITE_NAME}
-export TF_VAR_github_org="jluszcz"
-export TF_VAR_github_repo="ListOfL.ist"
-
-export TF_CLI_ARGS_init="-backend-config=key=list-of-lists/sites/${LOL_SITE_URL} -reconfigure"
-terraform init
+scripts/new-site.sh <site_url> <github_org> <github_repo> [site_name]
+# e.g. scripts/new-site.sh list-of-l.ist jluszcz ListOfL.ist
 ```
 
-Then from `site/`:
+This writes `sites/<site_url>/main.tf` (backend key `list-of-lists/sites/<site_url>`, calling `../../site-module`)
+and a `.envrc`. Then:
 
 ```sh
-cd site
-source ../env-<site>
+cd sites/<site_url>
+direnv allow          # first time only; loads the site's LOL_* vars
+terraform init
 terraform apply
 ```
+
+Switching sites is just `cd` — each workspace has its own state and direnv context, so there is no
+`-backend-config` juggling or re-init between sites.
 
 ### Update List
 
@@ -181,5 +177,5 @@ The Lambda role (defined in `shared/main.tf`) requires:
 
 Re-apply `shared/` Terraform when upgrading from a version without CloudFront permissions.
 
-See [moviel.ist](https://github.com/jluszcz/MovieList) or [burgerl.ist](https://github.com/jluszcz/BurgerList) for
-examples of how to automate uploads with [GitHub Actions](https://github.com/features/actions).
+A site's own repo can automate uploading `${LOL_SITE_URL}.json` to the generator bucket with
+[GitHub Actions](https://github.com/features/actions), assuming the `*.github-update` role created by `site-module`.

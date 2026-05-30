@@ -1,8 +1,9 @@
 terraform {
   backend "s3" {
-    bucket = "jluszcz-tf-state"
-    key    = "list-of-lists/shared"
-    region = "us-east-2"
+    bucket       = "jluszcz-tf-state"
+    key          = "list-of-lists/shared"
+    region       = "us-east-2"
+    use_lockfile = true
   }
 }
 
