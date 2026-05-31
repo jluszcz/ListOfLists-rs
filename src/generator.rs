@@ -82,6 +82,9 @@ impl Io {
             Io::LocalFile { site_path, .. } => {
                 let path = site_path.join(target);
                 debug!("Writing to {path:?}");
+                fs::create_dir_all(site_path)
+                    .await
+                    .with_context(|| format!("create dir {site_path:?}"))?;
                 fs::write(&path, content)
                     .await
                     .with_context(|| format!("write {path:?}"))
