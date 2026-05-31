@@ -1,10 +1,14 @@
+# Reusable per-site module. Each site is a tiny root module under sites/<site_url>/ that
+# provides the backend + provider configuration and calls this module. Backend and provider
+# blocks intentionally live in the root modules, not here.
+
 terraform {
-  backend "s3" {
-    bucket = "jluszcz-tf-state"
-    # key is provided via -backend-config at init time, e.g.:
-    #   terraform init -backend-config="key=list-of-lists/sites/${LOL_SITE_URL}"
-    # The env-* scripts set TF_CLI_ARGS_init to do this automatically.
-    region = "us-east-2"
+  required_providers {
+    aws = {
+      source                = "hashicorp/aws"
+      version               = ">= 6.37.0"
+      configuration_aliases = [aws.us_east_1]
+    }
   }
 }
 
@@ -19,15 +23,6 @@ variable "github_repo" {}
 variable "aws_region" {
   type    = string
   default = "us-east-2"
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
-provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
 }
 
 data "aws_caller_identity" "current" {}
@@ -88,11 +83,11 @@ resource "aws_s3_bucket_policy" "site" {
 }
 
 resource "aws_s3_object" "favicon" {
-  count         = fileexists("../buckets/${var.site_url}/images/favicon.ico") ? 1 : 0
+  count         = fileexists("${path.module}/../buckets/${var.site_url}/images/favicon.ico") ? 1 : 0
   bucket        = aws_s3_bucket.site.id
   key           = "images/favicon.ico"
-  source        = "../buckets/${var.site_url}/images/favicon.ico"
-  etag          = filemd5("../buckets/${var.site_url}/images/favicon.ico")
+  source        = "${path.module}/../buckets/${var.site_url}/images/favicon.ico"
+  etag          = filemd5("${path.module}/../buckets/${var.site_url}/images/favicon.ico")
   content_type  = "image/x-icon"
   cache_control = "public, max-age=31536000, immutable"
 }

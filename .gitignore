@@ -1,8 +1,9 @@
 *zip
 .claude/
+.envrc
 .terraform*
 /.idea
+/sites/
 /target
 bootstrap
 buckets/
-env-*

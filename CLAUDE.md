@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The application uses these environment variables:
 
 - `LOL_GENERATOR_BUCKET` - Generator bucket name (used by Lambda; CLI defaults to `generator` for local use)
-- `LOL_SITE_URL` - Site URL (e.g., "burgerl.ist") (CLI only)
+- `LOL_SITE_URL` - Site URL (e.g., "list-of-l.ist") (CLI only)
 
 ## Architecture
 
@@ -51,7 +51,7 @@ has two main execution modes:
 - Receives `title`, `lists`, and optional `footer`/`footer_links` variables from the generator
 - Iterates over non-hidden lists to build Bootstrap tab navigation and list content
 - Supports two item types: plain strings and tooltip objects (`{ item, tooltip }`)
-- When running locally (sourcing an `env-*` file), the generated `index.html` is written to `buckets/{site_url}/index.html` (e.g., `buckets/starl.ist/index.html`, `buckets/moviel.ist/index.html`)
+- When running locally, the generated `index.html` is written to `buckets/{site_url}/index.html` (e.g., `buckets/list-of-l.ist/index.html`)
 
 **Executables**
 
@@ -73,5 +73,18 @@ has two main execution modes:
 
 ### Terraform Infrastructure
 
-The `list-of-lists.tf` file contains AWS infrastructure definitions for S3 buckets, Lambda functions, and associated IAM
-roles.
+Terraform is split into independent root modules, each with its own S3 backend state (bucket `jluszcz-tf-state`,
+region `us-east-2`):
+
+- `shared/` — account-wide resources (generator S3 bucket, Lambda function + log group, shared IAM roles/policies,
+  GitHub OIDC roles). Backend key `list-of-lists/shared`.
+- `site-module/` — reusable module defining one site's resources (site S3 bucket, ACM cert, Route53 zone/records,
+  CloudFront distribution + OAC, per-site GitHub update role). No backend/provider blocks of its own.
+- `sites/<site_url>/` — one tiny root module per site. Each pins its own backend key
+  (`list-of-lists/sites/<site_url>`) and providers, then calls `../../site-module`. **These directories are
+  gitignored** so individual site identities never enter the repo; scaffold them locally with
+  `scripts/new-site.sh <site_url> <github_org> <github_repo> [site_name]`.
+
+Each directory carries a `.envrc` (direnv, also gitignored); `cd` into a dir to load its context. Run `terraform`
+from within the target directory — no `-backend-config` injection or workspace switching needed. New machines:
+`direnv allow` once per directory.
