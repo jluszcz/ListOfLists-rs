@@ -13,6 +13,7 @@ ListOfLists generates a static website, hosted on AWS in an S3 bucket, from a JS
 ```json
 {
   "title": "The List",
+  "description": "An example list of lists",
   "lists": [
     {
       "title": "Letters",
@@ -59,6 +60,9 @@ ListOfLists generates a static website, hosted on AWS in an S3 bucket, from a JS
 }
 ```
 
+The optional top-level `description` is used for the page's meta and OpenGraph descriptions; it falls back to `title`
+when omitted.
+
 ### List Fields
 
 | Field        | Type   | Default  | Description                                               |
@@ -72,10 +76,12 @@ ListOfLists generates a static website, hosted on AWS in an S3 bucket, from a JS
 
 The generator rejects input that would produce a degenerate page:
 
-- The top-level `title` must be non-empty.
+- The top-level `title` must be non-empty, and `description` (if present) must be non-empty.
 - `lists` must contain at least one list.
 - Each list `title`, each item string, and each tooltip must be non-empty.
 - Duplicate items within a list are rejected unless `duplicates: true`.
+- Visible list titles must remain distinct after sanitization into HTML ids (e.g. `Foo Bar` and `Foo_Bar` collide),
+  and must contain at least one usable id character (`A-Z`, `a-z`, `0-9`, `_`).
 
 ### Footers
 

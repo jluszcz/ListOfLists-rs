@@ -48,7 +48,7 @@ has two main execution modes:
 **Template (`index.template`)**
 
 - Minijinja template that renders the full HTML page for a site
-- Receives `title`, `lists`, and optional `footer`/`footer_links` variables from the generator
+- Receives `title`, `lists`, `site_url`, and optional `description`/`footer`/`footer_links` variables from the generator
 - Iterates over non-hidden lists to build Bootstrap tab navigation and list content
 - Supports two item types: plain strings and tooltip objects (`{ item, tooltip }`)
 - When running locally, the generated `index.html` is written to `buckets/{site_url}/index.html` (e.g., `buckets/list-of-l.ist/index.html`)

@@ -72,19 +72,27 @@ async fn function(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Er
         return Ok(json!({}));
     }
 
-    let template = generator::read_template(&generator_bucket, Some(&s3_client)).await?;
+    let ios: Vec<generator::Io> = site_urls
+        .iter()
+        .map(|site_url| {
+            generator::Io::new(
+                site_url.clone(),
+                generator_bucket.clone(),
+                Some(s3_client.clone()),
+            )
+        })
+        .collect();
+
+    // site_urls (and therefore ios) is non-empty here, and the template is
+    // shared, so read it through the first site's Io.
+    let template = ios[0].read_template().await?;
     let env = generator::build_environment(&template)?;
 
-    let render_futures = site_urls.iter().map(|site_url| {
-        let io = generator::Io::new(
-            site_url.clone(),
-            generator_bucket.clone(),
-            Some(s3_client.clone()),
-        );
+    let render_futures = site_urls.iter().zip(&ios).map(|(site_url, io)| {
         let env = &env;
         async move {
             info!("Updating {site_url}");
-            generator::render_site(&io, env, site_url, MINIFY).await
+            generator::render_site(io, env, site_url, MINIFY).await
         }
     });
     let render_results = futures::future::join_all(render_futures).await;

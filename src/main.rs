@@ -16,7 +16,7 @@ struct Args {
 
 fn parse_args() -> Args {
     let matches = Command::new("ListOfLists-Generator")
-        .version("0.1")
+        .version(env!("CARGO_PKG_VERSION"))
         .author("Jacob Luszcz")
         .arg(
             Arg::new("site-url")

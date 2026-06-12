@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub mod generator;
 
@@ -13,6 +13,11 @@ pub const SITE_URL_VAR: &str = "LOL_SITE_URL";
 #[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct ListOfLists {
     pub title: String,
+
+    // Used for the meta/OpenGraph descriptions; falls back to title in the template.
+    #[serde(default)]
+    pub description: Option<String>,
+
     pub lists: Vec<List>,
 
     #[serde(default, alias = "footerLinks")]
@@ -28,12 +33,37 @@ impl ListOfLists {
         if self.title.trim().is_empty() {
             return Err(anyhow!("ListOfLists title must not be empty"));
         }
+        if let Some(description) = &self.description
+            && description.trim().is_empty()
+        {
+            return Err(anyhow!("ListOfLists description must not be empty"));
+        }
         if self.lists.is_empty() {
             return Err(anyhow!("ListOfLists must contain at least one list"));
         }
         for l in &self.lists {
             l.validate()?;
         }
+
+        // Visible list titles become HTML ids after sanitization; collisions would
+        // produce duplicate ids and broken tab navigation.
+        let mut div_ids: HashMap<String, &str> = HashMap::new();
+        for l in self.lists.iter().filter(|l| !l.hidden) {
+            let div_id = generator::sanitized_div_id(l.title.as_str());
+            if div_id.is_empty() {
+                return Err(anyhow!(
+                    "List title {:?} contains no characters usable in an HTML id",
+                    l.title
+                ));
+            }
+            if let Some(existing) = div_ids.insert(div_id.clone(), l.title.as_str()) {
+                return Err(anyhow!(
+                    "List titles {existing:?} and {:?} both map to HTML id {div_id:?}",
+                    l.title
+                ));
+            }
+        }
+
         Ok(self)
     }
 }
@@ -47,7 +77,7 @@ pub struct List {
     pub hidden: bool,
 
     #[serde(default)]
-    duplicates: bool,
+    pub duplicates: bool,
 
     pub list: Vec<ListItem>,
 }
@@ -276,6 +306,7 @@ mod test {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
             footer_links: vec![],
+            description: None,
             footer: None,
             lists: vec![
                 List::new("Letters", true, false, &["A", "B", "C"]),
@@ -318,6 +349,7 @@ mod test {
         let lol = ListOfLists {
             title: "  ".to_string(),
             footer_links: vec![],
+            description: None,
             footer: None,
             lists: vec![List::new("Letters", false, false, &["A"])],
         };
@@ -329,8 +361,63 @@ mod test {
         let lol = ListOfLists {
             title: "The List".to_string(),
             footer_links: vec![],
+            description: None,
             footer: None,
             lists: vec![],
+        };
+        assert!(lol.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_blank_description() {
+        let lol = ListOfLists {
+            title: "The List".to_string(),
+            description: Some("  ".to_string()),
+            footer_links: vec![],
+            footer: None,
+            lists: vec![List::new("Letters", false, false, &["A"])],
+        };
+        assert!(lol.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_colliding_div_ids() {
+        let lol = ListOfLists {
+            title: "The List".to_string(),
+            description: None,
+            footer_links: vec![],
+            footer: None,
+            lists: vec![
+                List::new("Foo Bar", false, false, &["A"]),
+                List::new("Foo_Bar", false, false, &["B"]),
+            ],
+        };
+        assert!(lol.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_allows_hidden_div_id_collision() {
+        let lol = ListOfLists {
+            title: "The List".to_string(),
+            description: None,
+            footer_links: vec![],
+            footer: None,
+            lists: vec![
+                List::new("Foo Bar", false, false, &["A"]),
+                List::new("Foo_Bar", true, false, &["B"]),
+            ],
+        };
+        assert!(lol.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validation_rejects_unusable_div_id() {
+        let lol = ListOfLists {
+            title: "The List".to_string(),
+            description: None,
+            footer_links: vec![],
+            footer: None,
+            lists: vec![List::new("!!!", false, false, &["A"])],
         };
         assert!(lol.validate().is_err());
     }
@@ -374,6 +461,7 @@ mod test {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
             footer_links: vec![],
+            description: None,
             footer: Some(Footer {
                 imports: vec!["https://import.js".to_string()],
                 links: vec![FooterItem {
@@ -402,6 +490,7 @@ mod test {
                 icon: "github".to_string(),
                 title: None,
             }],
+            description: None,
             footer: None,
             lists: vec![List::new("Letters", true, false, &["A", "B", "C"])],
         };
