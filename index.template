@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
+    {%- set page_description = description if description else title %}
     <meta charset="utf-8">
-    <meta name="description" content="{{ title }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="{{ page_description }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#212529">
 
     <!-- Preconnect to external domains for performance -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous"></noscript>
+    <!-- The primary stylesheet loads synchronously: async-loading it would flash unstyled content -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
     {%- if footer %}
     {%- for import in footer['imports'] %}
@@ -23,7 +24,6 @@
 
     <style>
         :root {
-            --bs-dark: #212529;
             --hover-border-color: #6c757d;
         }
 
@@ -41,8 +41,8 @@
         }
 
         /* Better focus styles for accessibility */
-        .nav-link:focus {
-            outline: 2px solid #0d6efd;
+        .nav-link:focus-visible {
+            outline: 2px solid var(--bs-primary);
             outline-offset: 2px;
         }
 
@@ -66,30 +66,32 @@
     <link rel="icon" href="images/favicon.ico">
 
     <!-- Enhanced SEO and Social Media Meta Tags -->
+    <link rel="canonical" href="https://{{ site_url }}/">
     <meta property="og:title" content="{{ title }}">
-    <meta property="og:description" content="{{ title }}">
+    <meta property="og:description" content="{{ page_description }}">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://{{ site_url }}/">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="{{ title }}">
-    <meta name="twitter:description" content="{{ title }}">
+    <meta name="twitter:description" content="{{ page_description }}">
 
-    <!-- Structured Data -->
+    <!-- Structured Data: tojson handles JSON escaping; HTML-escaping would corrupt it here -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "{{ title }}",
-      "description": "{{ title }}",
+      "name": {{ title | tojson }},
+      "description": {{ page_description | tojson }},
       "mainEntity": {
         "@type": "ItemList",
-        "name": "{{ title }}",
-        "numberOfItems": {{ lists | length }}
+        "name": {{ title | tojson }},
+        "numberOfItems": {{ lists | rejectattr('hidden') | length }}
       }
     }
     </script>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg bg-dark navbar-dark sticky-top" role="navigation" aria-label="Main navigation">
+    <nav class="navbar navbar-expand-lg bg-dark navbar-dark sticky-top" aria-label="Main navigation">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
@@ -108,14 +110,14 @@
         </div>
     </nav>
 
-    <main class="tab-content pt-2" role="main" aria-label="List content">
+    <main class="tab-content pt-2" aria-label="List content">
     {%- for list_item in lists if not list_item['hidden'] %}
         <div class="tab-pane container-fluid {{ 'active' if loop.first else 'fade' }}" id="tab_{{ list_item['title'] | div_id_safe }}" role="tabpanel" aria-labelledby="nav-link-{{ list_item['title'] | div_id_safe }}">
             <h3>{{ list_item['title'] }}</h3>
             <ol>
             {%- for item in list_item['list'] %}
                 {%- if item is mapping %}
-                <li><span class="hover" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ item['tooltip'] }}" aria-label="{{ item['item'] }}, {{ item['tooltip'] }}" role="button" tabindex="0">{{ item['item'] }}</span></li>
+                <li><span class="hover" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ item['tooltip'] }}" tabindex="0">{{ item['item'] }}</span></li>
                 {%- else %}
                 <li>{{ item }}</li>
                 {%- endif %}
@@ -126,15 +128,15 @@
     </main>
 
     {%- if footer or footer_links %}
-    <footer class="footer bg-dark sticky-bottom mt-auto" role="contentinfo" aria-label="Site footer">
+    <footer class="footer bg-dark sticky-bottom mt-auto" aria-label="Site footer">
         <div class="container-fluid">
             {%- if footer %}
             {%- for link in footer['links'] %}
-            <a class="fs-4 me-3 link-light" href="{{ link.url | safe }}" {%- if link.title %} title="{{ link.title }}"{%- endif %} target="_blank"><i class="{{ link.icon }}"></i></a>
+            <a class="fs-4 me-3 link-light" href="{{ link.url }}" {%- if link.title %} title="{{ link.title }}"{%- endif %} target="_blank" rel="noopener noreferrer"><i class="{{ link.icon }}"></i></a>
             {%- endfor %}
             {%- elif footer_links %}
             {%- for link in footer_links %}
-            <a class="fs-4 me-3 link-light" href="{{ link.url | safe }}" {%- if link.title %} title="{{ link.title }}"{%- endif %} target="_blank"><i class="bi bi-{{ link.icon }}"></i></a>
+            <a class="fs-4 me-3 link-light" href="{{ link.url }}" {%- if link.title %} title="{{ link.title }}"{%- endif %} target="_blank" rel="noopener noreferrer"><i class="bi bi-{{ link.icon }}"></i></a>
             {%- endfor %}
             {%- endif %}
         </div>
@@ -145,46 +147,14 @@
     <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
 
     <script>
-        // Initialize tooltips with enhanced accessibility
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-                    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-                    [...tooltipTriggerList].map((tooltipTriggerEl, index) => {
-                        try {
-                            // Create unique ID for tooltip
-                            const tooltipId = 'tooltip-' + Date.now() + '-' + index;
-
-                            // Initialize Bootstrap tooltip with accessibility options
-                            const tooltip = new bootstrap.Tooltip(tooltipTriggerEl, {
-                                boundary: 'viewport',
-                                fallbackPlacements: ['top', 'bottom', 'left']
-                            });
-
-                            // Enhanced accessibility: ensure aria-describedby is set when tooltip shows
-                            tooltipTriggerEl.addEventListener('shown.bs.tooltip', function() {
-                                const tooltipElement = document.querySelector('.tooltip[role="tooltip"]');
-                                if (tooltipElement && !tooltipElement.id) {
-                                    tooltipElement.id = tooltipId;
-                                    tooltipTriggerEl.setAttribute('aria-describedby', tooltipId);
-                                }
-                            });
-
-                            // Clean up aria-describedby when tooltip hides
-                            tooltipTriggerEl.addEventListener('hidden.bs.tooltip', function() {
-                                tooltipTriggerEl.removeAttribute('aria-describedby');
-                            });
-
-                            return tooltip;
-                        } catch (error) {
-                            console.warn('Failed to initialize tooltip:', error);
-                            return null;
-                        }
-                    });
-                }
-            } catch (error) {
-                console.warn('Bootstrap tooltips failed to initialize:', error);
-            }
+        // Bootstrap manages tooltip aria-describedby wiring itself
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+                new bootstrap.Tooltip(el, {
+                    boundary: 'viewport',
+                    fallbackPlacements: ['top', 'bottom', 'left']
+                });
+            });
         });
 
         // Enhance keyboard navigation for tabs

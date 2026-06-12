@@ -2,7 +2,7 @@ use crate::{ListOfLists, s3util};
 use anyhow::{Context, Result};
 use log::{debug, trace};
 use minify_html::Cfg;
-use minijinja::{Environment, Error, State};
+use minijinja::{Environment, Error, State, Value, context};
 use regex::Regex;
 use std::sync::LazyLock;
 use std::{
@@ -46,6 +46,14 @@ impl Io {
                 site_path: Path::new("buckets").join(site_url),
             },
         }
+    }
+
+    // The template is shared across sites, so any Io for the same generator
+    // bucket reads the same template.
+    pub async fn read_template(&self) -> Result<String> {
+        self.read(SITE_INDEX_TEMPLATE)
+            .await
+            .with_context(|| format!("read {SITE_INDEX_TEMPLATE}"))
     }
 
     async fn read(&self, target: &str) -> Result<String> {
@@ -93,31 +101,6 @@ impl Io {
     }
 }
 
-pub async fn read_template(
-    generator_bucket: &str,
-    s3_client: Option<&aws_sdk_s3::Client>,
-) -> Result<String> {
-    match s3_client {
-        Some(client) => {
-            let bytes = s3util::get(client, generator_bucket, SITE_INDEX_TEMPLATE)
-                .await
-                .with_context(|| format!("read {SITE_INDEX_TEMPLATE}"))?;
-            let s = str::from_utf8(&bytes)
-                .with_context(|| format!("{SITE_INDEX_TEMPLATE} is not UTF-8"))?;
-            Ok(s.to_string())
-        }
-        None => {
-            let path = Path::new("buckets")
-                .join(generator_bucket)
-                .join(SITE_INDEX_TEMPLATE);
-            debug!("Reading {path:?}");
-            fs::read_to_string(&path)
-                .await
-                .with_context(|| format!("read {path:?}"))
-        }
-    }
-}
-
 async fn read_list(io: &Io, site_url: &str) -> Result<ListOfLists> {
     let key = format!("{site_url}.json");
     let content = io.read(&key).await.with_context(|| format!("read {key}"))?;
@@ -131,10 +114,10 @@ async fn read_list(io: &Io, site_url: &str) -> Result<ListOfLists> {
 }
 
 fn div_id_safe(_: &State, value: String) -> Result<String, Error> {
-    Ok(inner_div_id_safe(value))
+    Ok(sanitized_div_id(value))
 }
 
-fn inner_div_id_safe<S>(value: S) -> String
+pub(crate) fn sanitized_div_id<S>(value: S) -> String
 where
     S: Into<String>,
 {
@@ -212,7 +195,7 @@ pub async fn render_site(
 
     debug!("Rendering {SITE_INDEX} for {site_url}");
     let site = template
-        .render(&list_of_lists)
+        .render(context! { site_url, ..Value::from_serialize(&list_of_lists) })
         .with_context(|| format!("render {SITE_INDEX} for {site_url}"))?;
     debug!("Rendered {SITE_INDEX} for {site_url}");
 
@@ -248,9 +231,9 @@ pub async fn update_site(
     s3_client: Option<aws_sdk_s3::Client>,
     minify: bool,
 ) -> Result<()> {
-    let template = read_template(&generator_bucket, s3_client.as_ref()).await?;
-    let env = build_environment(&template)?;
     let io = Io::new(site_url.clone(), generator_bucket, s3_client);
+    let template = io.read_template().await?;
+    let env = build_environment(&template)?;
     render_site(&io, &env, &site_url, minify).await
 }
 
@@ -260,11 +243,11 @@ mod test {
 
     #[test]
     fn test_div_id_safe() {
-        assert_eq!("foo_bar_baz", inner_div_id_safe("foo, bar, baz"));
-        assert_eq!("Foo_Bar_Baz", inner_div_id_safe("Foo, Bar, Baz"));
-        assert_eq!("foo_1234", inner_div_id_safe("foo 1234"));
-        assert_eq!("Foo_1234", inner_div_id_safe("Foo 1234"));
-        assert_eq!("1234", inner_div_id_safe("1234"));
+        assert_eq!("foo_bar_baz", sanitized_div_id("foo, bar, baz"));
+        assert_eq!("Foo_Bar_Baz", sanitized_div_id("Foo, Bar, Baz"));
+        assert_eq!("foo_1234", sanitized_div_id("foo 1234"));
+        assert_eq!("Foo_1234", sanitized_div_id("Foo 1234"));
+        assert_eq!("1234", sanitized_div_id("1234"));
     }
 
     #[test]
