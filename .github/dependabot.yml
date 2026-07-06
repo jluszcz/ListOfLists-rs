@@ -12,3 +12,15 @@ updates:
           - "*"
     assignees:
       - "jluszcz"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+    groups:
+      all-actions:
+        patterns:
+          - "*"
+    assignees:
+      - "jluszcz"
