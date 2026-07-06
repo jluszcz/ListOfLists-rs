@@ -25,7 +25,7 @@ jobs:
       BUILD_TARGET: aarch64-unknown-linux-musl
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Update and Configure Rust
         run: |
@@ -82,7 +82,7 @@ jobs:
 
       - name: Configure AWS Credentials
         if: github.event_name == 'push'
-        uses: aws-actions/configure-aws-credentials@v6.0.0
+        uses: aws-actions/configure-aws-credentials@v6.2.1
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT }}.github-deploy
           role-session-name: github-deploy
