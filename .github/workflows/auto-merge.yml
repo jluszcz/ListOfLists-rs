@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event.pull_request.user.login == 'dependabot[bot]' ||
-      (github.event.pull_request.user.login == 'jluszcz' && github.event.pull_request.head.ref == 'Deps')
+      (github.event.pull_request.user.login == 'jluszcz' && startsWith(github.event.pull_request.head.ref, 'Deps-'))
 
     permissions:
       contents: write
