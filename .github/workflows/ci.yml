@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: CI
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
     paths:
-      - '.github/workflows/build-and-deploy.yml'
+      - '.github/workflows/ci.yml'
       - 'Cargo**'
       - 'src/**/*.rs'
 
@@ -18,7 +18,8 @@ env:
   PROJECT: list-of-lists
 
 jobs:
-  build-and-package:
+  build:
+    name: Build, Test & Lint
     runs-on: ubuntu-24.04-arm
 
     env:
@@ -65,7 +66,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: build-and-package
+    needs: build
 
     runs-on: ubuntu-latest
 
