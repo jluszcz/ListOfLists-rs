@@ -18,6 +18,7 @@ fn parse_args() -> Args {
     let matches = Command::new("ListOfLists-Generator")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Jacob Luszcz")
+        .infer_long_args(true)
         .arg(
             Arg::new("site-url")
                 .short('u')

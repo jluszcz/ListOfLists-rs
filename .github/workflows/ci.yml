@@ -33,7 +33,7 @@ jobs:
           sudo apt-get install -y musl-tools
           rustup target add ${{ env.BUILD_TARGET }}
           rustup update
-          rustup component add clippy
+          rustup component add clippy rustfmt
 
       - name: Dump Toolchain Info
         run: |
@@ -47,8 +47,11 @@ jobs:
       - name: Test
         run: cargo test --target ${{ env.BUILD_TARGET }}
 
+      - name: Format
+        run: cargo fmt --check
+
       - name: Lint
-        run: cargo clippy --target ${{ env.BUILD_TARGET }} -- -D warnings
+        run: cargo clippy --target ${{ env.BUILD_TARGET }} --all-targets -- -D warnings
 
       - name: Package
         if: github.event_name == 'push'
