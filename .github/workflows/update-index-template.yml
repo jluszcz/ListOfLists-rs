@@ -31,4 +31,4 @@ jobs:
         env:
           AWS_DEFAULT_REGION: us-east-2
           AWS_BUCKET: list-of-lists-${{ secrets.AWS_ACCOUNT_ID }}-us-east-2-an
-        run: aws s3 cp index.template s3://${AWS_BUCKET}/
+        run: aws s3 cp index.template "s3://${AWS_BUCKET}/"
