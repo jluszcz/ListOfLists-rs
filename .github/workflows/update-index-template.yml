@@ -25,10 +25,9 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/list-of-lists.github-update
           role-session-name: github-upload
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+          aws-region: us-east-2
 
       - name: Upload to S3
         env:
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          AWS_BUCKET: list-of-lists-${{ secrets.AWS_ACCOUNT_ID }}-${{ secrets.AWS_DEFAULT_REGION }}-an
-        run: aws s3 cp index.template s3://${AWS_BUCKET}/
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        run: aws s3 cp index.template "s3://list-of-lists-${AWS_ACCOUNT_ID}-${AWS_REGION}-an/"
