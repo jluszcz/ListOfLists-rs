@@ -8,10 +8,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `cargo build` - Build the project
 - `cargo fmt` - Format the source code
-- `cargo fmt --check` - Check formatting (same as CI)
+- `cargo fmt --check` - Check formatting
 - `cargo test` - Run all tests
 - `cargo check` - Check for compilation errors without building
-- `cargo clippy --all-targets -- -D warnings` - Run Rust linter for code quality checks (same as CI)
+- `cargo clippy --all-targets -- -D warnings` - Run Rust linter for code quality checks
+- `pre-commit run --all-files` - Run the configured hooks (includes `cargo fmt --check`)
+
+### CI
+
+`.github/workflows/ci.yml` is a thin caller of `jluszcz/github-utils/.github/workflows/rust-ci.yml@v1`, which runs
+build, test, `cargo fmt --check`, and `cargo clippy --all-targets -- -D warnings` on `ubuntu-24.04-arm` against the
+`aarch64-unknown-linux-musl` target. The steps live in that shared workflow, not in this repo. On a push to `main`,
+CI additionally packages and deploys the Lambda to `us-east-2` via the shared `lambda-package` and `deploy-lambda`
+workflows.
+
+### Dependency Versioning
+
+Pin 0.x dependencies to their **minor** version (`futures = "0.3"`, not `futures = "0"`). For 0.x crates the minor
+version is the breaking axis, so a bare `"0"` resolves to `<1.0.0` and lets breaking releases through silently.
 
 ### Running the Application
 
