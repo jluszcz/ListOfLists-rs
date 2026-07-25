@@ -15,7 +15,7 @@ bytes = "1"
 clap = { version = "4", features = ["derive", "env"] }
 futures = "0.3"
 minify-html = "0.16"
-jluszcz_rust_utils = { git = "https://github.com//jluszcz/rust-utils" }
+jluszcz_rust_utils = { git = "https://github.com/jluszcz/rust-utils" }
 lambda_runtime = "1"
 log = "0.4"
 minijinja = { version = "2", features = ["json"] }
