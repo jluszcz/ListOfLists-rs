@@ -67,6 +67,11 @@ has two main execution modes:
 - Iterates over non-hidden lists to build Bootstrap tab navigation and list content
 - Supports two item types: plain strings and tooltip objects (`{ item, tooltip }`)
 - When running locally, the generated `index.html` is written to `buckets/{site_url}/index.html` (e.g., `buckets/list-of-l.ist/index.html`)
+- **The template ships as its own S3 object** (uploaded by `.github/workflows/update-index-template.yml` when it
+  changes), so it is not compiled into the binary and nothing else in the build parses it. `cargo test` renders it
+  via `include_str!` against sample data for exactly that reason — a template that fails to compile or render breaks
+  *every* site the generator produces, and those tests are the only thing standing in front of that. `index.template`
+  is in CI's push paths so a template-only change still runs them.
 
 **Executables**
 

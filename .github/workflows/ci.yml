@@ -9,6 +9,9 @@ on:
       - '.github/workflows/ci.yml'
       - 'Cargo**'
       - 'src/**/*.rs'
+      # The template is rendered by a test, and a broken one breaks every site
+      # the generator produces.
+      - 'index.template'
 
   pull_request:
     branches:
