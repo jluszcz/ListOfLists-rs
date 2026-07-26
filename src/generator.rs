@@ -313,4 +313,70 @@ mod test {
         let input = r#"<link rel="icon" href="favicon.ico">"#;
         assert_eq!(input, inner_optimize_import(input));
     }
+
+    // The template ships as a separate S3 object rather than being compiled in,
+    // so nothing else in the build ever parses it. Uploading a broken one breaks
+    // every site the generator renders.
+    const EXAMPLE_LIST: &str = r#"
+    {
+        "title": "The List",
+        "description": "A list of lists",
+        "lists": [
+            {
+                "title": "Letters",
+                "hidden": true,
+                "list": ["A", "B", "C"]
+            },
+            {
+                "title": "Numbers",
+                "list": ["1", "2", {"item": "3", "tooltip": "three"}]
+            }
+        ],
+        "footerLinks": [{"url": "https://example.com", "icon": "bi-house", "title": "Home"}]
+    }
+    "#;
+
+    fn render_index_template(list_of_lists: &ListOfLists) -> String {
+        let template = include_str!("../index.template");
+        let env = build_environment(template).expect("index.template must compile");
+        env.get_template(SITE_INDEX)
+            .expect("compiled template must be registered")
+            .render(context! { site_url => "example.com", ..Value::from_serialize(list_of_lists) })
+            .expect("index.template must render")
+    }
+
+    #[test]
+    fn index_template_renders_the_site() {
+        let list_of_lists: ListOfLists =
+            serde_json::from_str(EXAMPLE_LIST).expect("example list must deserialize");
+
+        let rendered = render_index_template(&list_of_lists);
+
+        assert!(rendered.contains("<html"), "{rendered}");
+        assert!(rendered.contains("The List"), "{rendered}");
+        assert!(rendered.contains("A list of lists"), "{rendered}");
+        assert!(rendered.contains("Numbers"), "{rendered}");
+        assert!(
+            rendered.contains("three"),
+            "tooltip should render: {rendered}"
+        );
+    }
+
+    #[test]
+    fn index_template_renders_a_minimal_site() {
+        // No description, no footer, no footer links — every optional branch skipped.
+        let list_of_lists: ListOfLists = serde_json::from_str(
+            r#"{"title": "Bare", "lists": [{"title": "Only", "list": ["x"]}]}"#,
+        )
+        .expect("minimal list must deserialize");
+
+        let rendered = render_index_template(&list_of_lists);
+
+        assert!(rendered.contains("Bare"), "{rendered}");
+        // description falls back to title for the meta tags
+        assert!(
+            rendered.contains(r#"name="description" content="Bare""#),
+            "{rendered}"
+        );
+    }
 }
