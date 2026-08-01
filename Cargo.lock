@@ -2058,7 +2058,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "jluszcz_rust_utils"
 version = "0.1.0"
-source = "git+https://github.com/jluszcz/rust-utils#a614163df003cc0a0873c99362832d77c620e9f8"
+source = "git+https://github.com/jluszcz/rust-utils#fbf639672d56057c4b742b8a3d38cb9d936c775c"
 dependencies = [
  "anyhow",
  "chrono",
