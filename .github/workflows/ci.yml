@@ -40,7 +40,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: jluszcz/github-utils/.github/workflows/deploy-lambda.yml@v1
+    uses: jluszcz/github-utils/.github/workflows/deploy-lambda.yml@v2
     with:
       aws-region: us-east-2
       project: list-of-lists
