@@ -257,7 +257,9 @@ resource "aws_iam_role_policy_attachment" "github_update_template" {
 
 data "aws_iam_policy_document" "github_deploy" {
   statement {
-    actions   = ["s3:PutObject"]
+    # GetObject too: update-function-code makes Lambda fetch the artifact with
+    # the caller's credentials, not the function's execution role.
+    actions   = ["s3:PutObject", "s3:GetObject"]
     resources = ["${data.aws_s3_bucket.code_bucket.arn}/list-of-lists.zip"]
   }
 
