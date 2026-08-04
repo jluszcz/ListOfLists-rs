@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   ci:
-    uses: jluszcz/github-utils/.github/workflows/rust-ci.yml@v1
+    uses: jluszcz/github-utils/.github/workflows/rust-ci.yml@v2
     with:
       runs-on: ubuntu-24.04-arm
       target: aarch64-unknown-linux-musl
@@ -30,7 +30,7 @@ jobs:
   package:
     needs: ci
     if: github.event_name == 'push'
-    uses: jluszcz/github-utils/.github/workflows/lambda-package.yml@v1
+    uses: jluszcz/github-utils/.github/workflows/lambda-package.yml@v2
     with:
       project: list-of-lists
 

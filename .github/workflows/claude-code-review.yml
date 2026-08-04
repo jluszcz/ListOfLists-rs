@@ -9,5 +9,5 @@ permissions:
   id-token: write
 jobs:
   claude-review:
-    uses: jluszcz/github-utils/.github/workflows/claude-code-review.yml@v1
+    uses: jluszcz/github-utils/.github/workflows/claude-code-review.yml@v2
     secrets: inherit

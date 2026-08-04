@@ -12,5 +12,5 @@ permissions:
   actions: read
 jobs:
   claude:
-    uses: jluszcz/github-utils/.github/workflows/claude.yml@v1
+    uses: jluszcz/github-utils/.github/workflows/claude.yml@v2
     secrets: inherit
