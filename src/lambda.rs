@@ -1,11 +1,10 @@
 use anyhow::{Context, Result, anyhow};
-use aws_config::ConfigLoader;
 use aws_lambda_events::s3::S3Event;
 use aws_sdk_cloudfront::Client as CloudFrontClient;
 use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
 use aws_sdk_s3::Client as S3Client;
-use jluszcz_rust_utils::lambda;
-use lambda_runtime::{LambdaEvent, service_fn};
+use jluszcz_rust_utils::{aws, lambda};
+use lambda_runtime::LambdaEvent;
 use list_of_lists::{APP_NAME, generator, s3util};
 use log::{debug, info, warn};
 use serde_json::{Value, json};
@@ -22,17 +21,13 @@ static INVALIDATION_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 #[tokio::main]
 async fn main() -> Result<(), lambda_runtime::Error> {
-    let func = service_fn(function);
-    lambda_runtime::run(func).await?;
-    Ok(())
+    lambda::run(APP_NAME, module_path!(), false, function).await
 }
 
 async fn function(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Error> {
-    lambda::init(APP_NAME, module_path!(), false).await?;
-
     let generator_bucket = env::var(list_of_lists::GENERATOR_BUCKET_VAR)?;
 
-    let aws_config = ConfigLoader::default().load().await;
+    let aws_config = aws::config(None).await;
     let s3_client = S3Client::new(&aws_config);
     let cloudfront_client = CloudFrontClient::new(&aws_config);
 

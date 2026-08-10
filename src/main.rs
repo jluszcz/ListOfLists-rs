@@ -1,6 +1,7 @@
 use anyhow::Result;
-use aws_config::ConfigLoader;
 use clap::Parser;
+use jluszcz_rust_utils::aws;
+use jluszcz_rust_utils::cli::VerbosityArgs;
 use jluszcz_rust_utils::set_up_logger;
 use list_of_lists::{APP_NAME, generator};
 use log::debug;
@@ -26,9 +27,8 @@ struct Args {
     )]
     generator_bucket: String,
 
-    /// Verbose mode. Use -v for DEBUG, -vv for TRACE level logging.
-    #[arg(short = 'v', action = clap::ArgAction::Count)]
-    verbosity: u8,
+    #[command(flatten)]
+    verbosity: VerbosityArgs,
 
     /// If provided, use S3 rather than local files.
     #[arg(short = 'r', long = "remote")]
@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
     debug!("Args: {args:?}");
 
     let s3_client = if args.use_s3 {
-        let aws_config = ConfigLoader::default().load().await;
+        let aws_config = aws::config(None).await;
         Some(aws_sdk_s3::Client::new(&aws_config))
     } else {
         None

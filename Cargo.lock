@@ -2058,13 +2058,18 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "jluszcz_rust_utils"
 version = "0.1.0"
-source = "git+https://github.com/jluszcz/rust-utils#fbf639672d56057c4b742b8a3d38cb9d936c775c"
+source = "git+https://github.com/jluszcz/rust-utils#61df107e8ef307adce65a2b1e335912dc6772bd9"
 dependencies = [
  "anyhow",
+ "aws-config",
  "chrono",
+ "clap",
  "fern",
+ "lambda_runtime",
  "log",
  "rustc_version",
+ "rustls 0.23.41",
+ "serde",
 ]
 
 [[package]]
@@ -2195,7 +2200,6 @@ name = "list_of_lists"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "aws-config",
  "aws-sdk-cloudfront",
  "aws-sdk-s3",
  "aws_lambda_events",
