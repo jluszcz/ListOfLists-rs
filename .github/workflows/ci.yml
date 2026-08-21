@@ -6,7 +6,6 @@ on:
       - main
 
     paths:
-      - '**/*.tf'
       - '.github/workflows/ci.yml'
       - 'Cargo**'
       - 'src/**/*.rs'

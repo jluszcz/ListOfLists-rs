@@ -28,6 +28,8 @@ file, but `terraform validate` runs against `shared/` only: `site-module/` decla
 the gitignored `/sites/`. The `terraform_validate` pre-commit hook is scoped to `^shared/` for the same reason.
 Terraform is never *applied* by CI.
 
+The Terraform check is deliberately absent from `on.push.paths`. That filter gates the *whole* workflow, and `package`/`deploy` are gated only by `if: github.event_name == 'push'` — listing `.tf` there would make a Terraform-only push to `main` deploy the Lambda. The `pull_request` trigger has no path filter, so the check still runs on every PR, which is where it gates.
+
 ### Dependency Versioning
 
 Pin 0.x dependencies to their **minor** version (`futures = "0.3"`, not `futures = "0"`). For 0.x crates the minor
