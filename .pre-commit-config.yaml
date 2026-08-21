@@ -19,3 +19,14 @@ repos:
         entry: cargo fmt --check -q
         language: system
         pass_filenames: false
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.108.1
+    hooks:
+      # Both run offline; neither needs AWS credentials.
+      - id: terraform_fmt
+      # site-module needs a caller to pass its aws.us_east_1 provider, and
+      # every caller is under the gitignored /sites/, so validate shared only.
+      - id: terraform_validate
+        files: ^shared/
+        args:
+          - --tf-init-args=-backend=false

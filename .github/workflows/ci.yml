@@ -6,6 +6,7 @@ on:
       - main
 
     paths:
+      - '**/*.tf'
       - '.github/workflows/ci.yml'
       - 'Cargo**'
       - 'src/**/*.rs'
@@ -46,3 +47,12 @@ jobs:
       project: list-of-lists
     secrets:
       aws-account-id: ${{ secrets.AWS_ACCOUNT_ID }}
+
+  terraform:
+    uses: jluszcz/github-utils/.github/workflows/terraform-ci.yml@v2
+    with:
+      # site-module is a child module: it declares configuration_aliases for
+      # aws.us_east_1, so it cannot be validated without a caller to pass that
+      # provider in, and every caller lives under the gitignored /sites/.
+      # `terraform fmt` still covers it.
+      directories: shared
