@@ -7,8 +7,12 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1"
-aws-sdk-cloudfront = { version = "1", features = ["behavior-version-latest"] }
-aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
+# `default` pulls in the `rustls` feature, which is the legacy hyper-0.14 client stack
+# (rustls 0.21 / rustls-webpki 0.101) that nothing here uses and that no longer receives
+# security fixes. `default-https-client` is the modern rustls 0.23 path the SDKs actually call.
+# The feature lists below are each SDK's own defaults minus `rustls`, so nothing else changes.
+aws-sdk-cloudfront = { version = "1", default-features = false, features = ["behavior-version-latest", "default-https-client", "rt-tokio"] }
+aws-sdk-s3 = { version = "1", default-features = false, features = ["behavior-version-latest", "default-https-client", "http-1x", "rt-tokio", "sigv4a"] }
 aws_lambda_events = "1"
 bytes = "1"
 clap = { version = "4", features = ["derive", "env"] }
