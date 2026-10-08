@@ -21,16 +21,6 @@ updates:
     assignees:
       - "jluszcz"
   - package-ecosystem: "terraform"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-    groups:
-      all-terraform:
-        patterns:
-          - "*"
-    assignees:
-      - "jluszcz"
-  - package-ecosystem: "terraform"
     directory: "/shared"
     schedule:
       interval: "monthly"
@@ -46,46 +36,6 @@ updates:
       interval: "monthly"
     groups:
       all-terraform:
-        patterns:
-          - "*"
-    assignees:
-      - "jluszcz"
-  - package-ecosystem: "terraform"
-    directory: "/sites/burgerl.ist"
-    schedule:
-      interval: "monthly"
-    groups:
-      all-terraform:
-        patterns:
-          - "*"
-    assignees:
-      - "jluszcz"
-  - package-ecosystem: "terraform"
-    directory: "/sites/starl.ist"
-    schedule:
-      interval: "monthly"
-    groups:
-      all-terraform:
-        patterns:
-          - "*"
-    assignees:
-      - "jluszcz"
-  - package-ecosystem: "terraform"
-    directory: "/sites/moviel.ist"
-    schedule:
-      interval: "monthly"
-    groups:
-      all-terraform:
-        patterns:
-          - "*"
-    assignees:
-      - "jluszcz"
-  - package-ecosystem: "npm"
-    directory: "/bootstrap"
-    schedule:
-      interval: "monthly"
-    groups:
-      all-dependencies:
         patterns:
           - "*"
     assignees:
