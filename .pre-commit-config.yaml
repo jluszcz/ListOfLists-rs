@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-merge-conflict
       - id: check-toml
@@ -20,7 +20,7 @@ repos:
         language: system
         pass_filenames: false
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.108.1
+    rev: v1.109.2
     hooks:
       # Both run offline; neither needs AWS credentials.
       - id: terraform_fmt
