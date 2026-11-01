@@ -2,6 +2,7 @@ use crate::{ListOfLists, s3util};
 use anyhow::{Context, Result};
 use log::{debug, trace};
 use minify_html::Cfg;
+use minijinja::value::Serde;
 use minijinja::{Environment, Error, State, Value, context};
 use regex::Regex;
 use std::sync::LazyLock;
@@ -195,7 +196,7 @@ pub async fn render_site(
 
     debug!("Rendering {SITE_INDEX} for {site_url}");
     let site = template
-        .render(context! { site_url, ..Value::from_serialize(&list_of_lists) })
+        .render(context! { site_url, ..Value::from(Serde(&list_of_lists)) })
         .with_context(|| format!("render {SITE_INDEX} for {site_url}"))?;
     debug!("Rendered {SITE_INDEX} for {site_url}");
 
@@ -341,7 +342,7 @@ mod test {
         let env = build_environment(template).expect("index.template must compile");
         env.get_template(SITE_INDEX)
             .expect("compiled template must be registered")
-            .render(context! { site_url => "example.com", ..Value::from_serialize(list_of_lists) })
+            .render(context! { site_url => "example.com", ..Value::from(Serde(list_of_lists)) })
             .expect("index.template must render")
     }
 
