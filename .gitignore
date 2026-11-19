@@ -3,6 +3,7 @@
 .envrc
 .terraform*
 /.idea
+/rendered/
 /sites/
 /target
 bootstrap

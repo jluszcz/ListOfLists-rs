@@ -13,6 +13,9 @@ This file provides guidance to AI coding agents when working with code in this r
 - `cargo check` - Check for compilation errors without building
 - `cargo clippy --all-targets -- -D warnings` - Run Rust linter for code quality checks
 - `pre-commit run --all-files` - Run the configured hooks (includes `cargo fmt --check`)
+- `scripts/render-fixtures.sh rendered` - Render `index.template` against every fixture in `tests/fixtures/` with
+  minification on. To validate locally, run the `npx vnu-jar` command from `.github/workflows/validate-template.yml`
+  against `rendered` (needs Java).
 
 ### CI
 
@@ -27,6 +30,13 @@ file, but `terraform validate` runs against `shared/` only: `site-module/` decla
 `aws.us_east_1` and cannot be validated without a caller to pass that provider in, and every caller lives under
 the gitignored `/sites/`. The `terraform_validate` pre-commit hook is scoped to `^shared/` for the same reason.
 Terraform is never *applied* by CI.
+
+`ci.yml` and `update-index-template.yml` both call the local `validate-template.yml`, whose `html` job runs
+`scripts/render-fixtures.sh` and then `vnu-jar` via `npx`. In `update-index-template.yml` the S3 upload `needs`
+it, so a template that fails validation never reaches the generator bucket; in `ci.yml`, `package` needs it, so
+the Lambda isn't deployed when the rendered output is invalid. Dependabot does not bump the
+`vnu-jar` pin in that job. The fixtures and script are absent from `ci.yml`'s `on.push.paths` for the same reason
+as Terraform below; the PR trigger still runs the check on every PR.
 
 The Terraform check is deliberately absent from `on.push.paths`. That filter gates the *whole* workflow, and `package`/`deploy` are gated only by `if: github.event_name == 'push'` — listing `.tf` there would make a Terraform-only push to `main` deploy the Lambda. The `pull_request` trigger has no path filter, so the check still runs on every PR, which is where it gates.
 
@@ -79,7 +89,10 @@ has two main execution modes:
   changes), so it is not compiled into the binary and nothing else in the build parses it. `cargo test` renders it
   via `include_str!` against sample data for exactly that reason — a template that fails to compile or render breaks
   *every* site the generator produces, and those tests are the only thing standing in front of that. `index.template`
-  is in CI's push paths so a template-only change still runs them.
+  is in CI's push paths so a template-only change still runs them. Those tests check that it renders;
+  the `html` CI job checks that the minified output is valid HTML. `tests/fixtures/example.com.json`
+  is shaped like the production sites (`footer` with `imports` and `links`, several visible lists behind a hidden
+  one, and escaping-sensitive text), so keep it in step with the data model.
 
 **Executables**
 

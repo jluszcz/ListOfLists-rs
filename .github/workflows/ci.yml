@@ -27,8 +27,12 @@ jobs:
       runs-on: ubuntu-24.04-arm
       target: aarch64-unknown-linux-musl
 
+  validate-template:
+    uses: ./.github/workflows/validate-template.yml
+
   package:
-    needs: ci
+    # The Lambda's minifier and import rewriting shape the HTML too, so invalid output blocks the deploy.
+    needs: [ci, validate-template]
     if: github.event_name == 'push'
     uses: jluszcz/github-utils/.github/workflows/lambda-package.yml@v2
     with:

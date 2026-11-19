@@ -1,0 +1,25 @@
+name: Validate Template
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  html:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Update Rust
+        run: rustup update
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+
+      - name: Render Fixtures
+        run: scripts/render-fixtures.sh rendered
+
+      - name: Validate HTML/CSS
+        run: npx --yes vnu-jar@26.11.19 --also-check-css --Werror rendered
