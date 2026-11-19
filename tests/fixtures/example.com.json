@@ -1,0 +1,39 @@
+{
+  "title": "The \"Example\" List & Friends",
+  "description": "Lists of things — with <angle brackets>, ampersands & quotes \"like these\"",
+  "lists": [
+    {
+      "title": "Hidden First",
+      "hidden": true,
+      "list": ["Should not render"]
+    },
+    {
+      "title": "Top Films (2024)",
+      "list": [
+        "Amélie",
+        {"item": "Crouching Tiger, Hidden Dragon", "tooltip": "臥虎藏龍 — \"Wòhǔ Cánglóng\""},
+        {"item": "Tom & Jerry", "tooltip": "<b>not</b> bold & 'quoted'"},
+        "Spinal Tap"
+      ]
+    },
+    {
+      "title": "Burgers: Ranked!",
+      "duplicates": true,
+      "list": ["Smash", "Smash", "Double <Double>"]
+    },
+    {
+      "title": "Stars",
+      "list": [{"item": "Sirius", "tooltip": "α CMa"}]
+    }
+  ],
+  "footer": {
+    "imports": [
+      "<script src=\"https://kit.example.com/abc123.js\" crossorigin=\"anonymous\"></script>",
+      "<link rel=\"stylesheet\" href=\"https://cdn.example.com/icons.css\" crossorigin=\"anonymous\">"
+    ],
+    "links": [
+      {"url": "https://github.com/example/example", "title": "GitHub", "icon": "fa-brands fa-github"},
+      {"url": "https://example.com/?a=1&b=2", "icon": "fa-solid fa-link"}
+    ]
+  }
+}

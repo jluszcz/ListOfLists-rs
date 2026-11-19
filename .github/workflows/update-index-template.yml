@@ -10,7 +10,12 @@ on:
       - 'index.template'
 
 jobs:
+  # Uploading triggers a re-render of every site, so an invalid template must never reach S3.
+  validate:
+    uses: ./.github/workflows/validate-template.yml
+
   update-index:
+    needs: validate
     runs-on: ubuntu-latest
 
     permissions:
