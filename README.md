@@ -89,10 +89,6 @@ The `footer` object supports `imports` and `links`. Use `imports` to inject `<sc
 libraries), and `links` to render footer icons. The `icon` field is passed as a CSS class, so it works with
 both [Bootstrap Icons](https://icons.getbootstrap.com) and [Font Awesome](https://fontawesome.com).
 
-The legacy `footerLinks` top-level array is still supported for backwards compatibility; `icon` in that format is
-treated as a [Bootstrap Icon](https://icons.getbootstrap.com) name. When both `footerLinks` and `footer` are present,
-`footer` takes precedence.
-
 ## Local Development
 
 Files are read from `buckets/{generator_bucket}/` when running locally (default: `buckets/generator/`). The directory

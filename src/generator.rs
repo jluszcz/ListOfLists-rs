@@ -333,7 +333,10 @@ mod test {
                 "list": ["1", "2", {"item": "3", "tooltip": "three"}]
             }
         ],
-        "footerLinks": [{"url": "https://example.com", "icon": "bi-house", "title": "Home"}]
+        "footer": {
+            "imports": ["<script src=\"https://example.com/kit.js\"></script>"],
+            "links": [{"url": "https://example.com", "icon": "fa-solid fa-house", "title": "Home"}]
+        }
     }
     "#;
 
@@ -375,11 +378,19 @@ mod test {
             !rendered.contains("Letters"),
             "hidden list should not render: {rendered}"
         );
+        assert!(
+            rendered.contains(r#"<script defer src="https://example.com/kit.js"></script>"#),
+            "footer import should render deferred: {rendered}"
+        );
+        assert!(
+            rendered.contains(r#"<i class="fa-solid fa-house"></i>"#),
+            "footer link icon should render: {rendered}"
+        );
     }
 
     #[test]
     fn index_template_renders_a_minimal_site() {
-        // No description, no footer, no footer links — every optional branch skipped.
+        // No description and no footer — every optional branch skipped.
         let list_of_lists: ListOfLists = serde_json::from_str(
             r#"{"title": "Bare", "lists": [{"title": "Only", "list": ["x"]}]}"#,
         )
@@ -392,6 +403,10 @@ mod test {
         assert!(
             rendered.contains(r#"name="description" content="Bare""#),
             "{rendered}"
+        );
+        assert!(
+            !rendered.contains("<footer"),
+            "footer should not render without a footer object: {rendered}"
         );
     }
 }

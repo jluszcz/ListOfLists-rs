@@ -20,9 +20,6 @@ pub struct ListOfLists {
 
     pub lists: Vec<List>,
 
-    #[serde(default, alias = "footerLinks")]
-    pub footer_links: Vec<FooterItem>,
-
     pub footer: Option<Footer>,
 }
 
@@ -305,7 +302,6 @@ mod test {
     fn test_list_of_lists_serde() -> Result<()> {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
-            footer_links: vec![],
             description: None,
             footer: None,
             lists: vec![
@@ -348,7 +344,6 @@ mod test {
     fn test_validation_rejects_empty_top_level_title() {
         let lol = ListOfLists {
             title: "  ".to_string(),
-            footer_links: vec![],
             description: None,
             footer: None,
             lists: vec![List::new("Letters", false, false, &["A"])],
@@ -360,7 +355,6 @@ mod test {
     fn test_validation_rejects_empty_lists_vec() {
         let lol = ListOfLists {
             title: "The List".to_string(),
-            footer_links: vec![],
             description: None,
             footer: None,
             lists: vec![],
@@ -373,7 +367,6 @@ mod test {
         let lol = ListOfLists {
             title: "The List".to_string(),
             description: Some("  ".to_string()),
-            footer_links: vec![],
             footer: None,
             lists: vec![List::new("Letters", false, false, &["A"])],
         };
@@ -385,7 +378,6 @@ mod test {
         let lol = ListOfLists {
             title: "The List".to_string(),
             description: None,
-            footer_links: vec![],
             footer: None,
             lists: vec![
                 List::new("Foo Bar", false, false, &["A"]),
@@ -400,7 +392,6 @@ mod test {
         let lol = ListOfLists {
             title: "The List".to_string(),
             description: None,
-            footer_links: vec![],
             footer: None,
             lists: vec![
                 List::new("Foo Bar", false, false, &["A"]),
@@ -415,7 +406,6 @@ mod test {
         let lol = ListOfLists {
             title: "The List".to_string(),
             description: None,
-            footer_links: vec![],
             footer: None,
             lists: vec![List::new("!!!", false, false, &["A"])],
         };
@@ -460,7 +450,6 @@ mod test {
     fn test_list_of_lists_footer() -> Result<()> {
         let list_of_lists = ListOfLists {
             title: "The List".to_string(),
-            footer_links: vec![],
             description: None,
             footer: Some(Footer {
                 imports: vec!["https://import.js".to_string()],
@@ -470,28 +459,6 @@ mod test {
                     title: Some("GitHub".to_string()),
                 }],
             }),
-            lists: vec![List::new("Letters", true, false, &["A", "B", "C"])],
-        };
-
-        let serialized = serde_json::to_string(&list_of_lists)?;
-        let deserialized: ListOfLists = serde_json::from_str(&serialized)?;
-
-        assert_eq!(list_of_lists, deserialized);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_list_of_lists_legacy_footer() -> Result<()> {
-        let list_of_lists = ListOfLists {
-            title: "The List".to_string(),
-            footer_links: vec![FooterItem {
-                url: "https://github.com".to_string(),
-                icon: "github".to_string(),
-                title: None,
-            }],
-            description: None,
-            footer: None,
             lists: vec![List::new("Letters", true, false, &["A", "B", "C"])],
         };
 
