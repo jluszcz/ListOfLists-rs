@@ -361,6 +361,20 @@ mod test {
             rendered.contains("three"),
             "tooltip should render: {rendered}"
         );
+        // The page's only <h1> is the site title; each visible list is an <h2> beneath it.
+        assert_eq!(rendered.matches("<h1").count(), 1, "{rendered}");
+        assert!(
+            rendered.contains(r#"<h1 class="visually-hidden">The List</h1>"#),
+            "{rendered}"
+        );
+        assert!(
+            rendered.contains(r#"<h2 class="h3">Numbers</h2>"#),
+            "{rendered}"
+        );
+        assert!(
+            !rendered.contains("Letters"),
+            "hidden list should not render: {rendered}"
+        );
     }
 
     #[test]
