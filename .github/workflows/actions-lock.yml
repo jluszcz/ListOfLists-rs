@@ -1,0 +1,11 @@
+name: Actions Lockfile
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  actions-lock:
+    uses: jluszcz/github-utils/.github/workflows/actions-lock.yml@v2
