@@ -6,8 +6,12 @@ workflows:
     '.github/workflows/actions-lock.yml': []
     '.github/workflows/auto-merge.yml': []
     '.github/workflows/ci.yml': []
-    '.github/workflows/claude-code-review.yml': []
-    '.github/workflows/claude.yml': []
+    '.github/workflows/claude-code-review.yml':
+        - 'actions/checkout@v7.0.1'
+        - 'anthropics/claude-code-action@v1.0.264'
+    '.github/workflows/claude.yml':
+        - 'actions/checkout@v7.0.1'
+        - 'anthropics/claude-code-action@v1.0.264'
     '.github/workflows/update-index-template.yml':
         - 'actions/checkout@v7.0.1'
         - 'aws-actions/configure-aws-credentials@v6.3.0'
@@ -20,11 +24,23 @@ dependencies:
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
+    'anthropics/claude-code-action@v1.0.264':
+        ref: 'v1.0.264'
+        commit: 'sha1-d70510b174a1244958df0b03166a54912811f3e6'
+        owner_id: 76263028
+        repo_id: 986421638
+        uses:
+            - 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6'
     'aws-actions/configure-aws-credentials@v6.3.0':
         ref: 'v6.3.0'
         commit: 'sha1-e1253824e5c10ff9df46874f81ed3ec929e19cfd'
         owner_id: 57468012
         repo_id: 220391287
+    'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6':
+        ref: 'v2.2.0'
+        commit: 'sha1-0c5077e51419868618aeaa5fe8019c62421857d6'
+        owner_id: 108928776
+        repo_id: 512644635
     'swatinem/rust-cache@v2.9.3':
         ref: 'v2.9.3'
         commit: 'sha1-d1527c8f67ef9af357290475d4af4b0fab8f12e0'
